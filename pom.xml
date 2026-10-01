@@ -25,7 +25,7 @@
     <jjwt.version>0.13.0</jjwt.version>
     <!-- Declarativas: Mockito y Jacoco siguen siendo explícitas para tener control -->
     <mockito.version>5.15.2</mockito.version>
-    <jacoco.version>0.8.11</jacoco.version>
+    <jacoco.version>0.8.13</jacoco.version>
   </properties>
 
   <dependencies>
