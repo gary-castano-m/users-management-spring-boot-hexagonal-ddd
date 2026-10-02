@@ -28,16 +28,16 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 /**
- * Tests for UserRepositoryMySQL.
+ * Tests for UserRepositoryPostgres.
  *
  * <p>Covers all public methods with their branches: save() — happy path, INSERT failure, user not
  * found after insert (orElseThrow); update() — happy path, UPDATE failure; getById() — found, not
  * found, SQLException; getByEmail() — found, not found, SQLException; getAll() — happy path,
  * SQLException; delete() — happy path, SQLException.
  */
-@DisplayName("UserRepositoryMySQL")
+@DisplayName("UserRepositoryPostgres")
 @ExtendWith(MockitoExtension.class)
-class UserRepositoryMySQLTest {
+class UserRepositoryPostgresTest {
 
   private static final String ID = "u-001";
   private static final String NAME = "John Doe";
@@ -53,14 +53,14 @@ class UserRepositoryMySQLTest {
   @Mock private PreparedStatement statement;
   @Mock private ResultSet resultSet;
 
-  private UserRepositoryMySQL repository;
+  private UserRepositoryPostgres repository;
   private UserModel userModel;
   private UserId userId;
   private UserEmail userEmail;
 
   @BeforeEach
   void setUp() {
-    repository = new UserRepositoryMySQL(dataSource);
+    repository = new UserRepositoryPostgres(dataSource);
     userId = new UserId(ID);
     userEmail = new UserEmail(EMAIL);
     userModel =
