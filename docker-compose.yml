@@ -1,0 +1,56 @@
+# ═══════════════════════════════════════════════════════════════
+# Entorno de desarrollo local: API + PostgreSQL
+# Uso:  docker compose up --build -d
+# Los valores ${VAR:-defecto} se toman del archivo .env si existe;
+# si no, se usa el valor por defecto.
+# ═══════════════════════════════════════════════════════════════
+
+services:
+
+  # ─────────────────────────────────────────────────────────────
+  # Base de datos PostgreSQL (misma versión principal que Neon)
+  # ─────────────────────────────────────────────────────────────
+  db:
+    image: postgres:17-alpine
+    container_name: oye-db
+    environment:
+      POSTGRES_DB: ${DB_NAME:-oye_db}
+      POSTGRES_USER: ${DB_USERNAME:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+    ports:
+      - "5432:5432"
+    volumes:
+      # Datos persistentes: sobreviven aunque el contenedor se borre
+      - pgdata:/var/lib/postgresql/data
+      # schema.sql se ejecuta automáticamente al crear la base por primera vez
+      - ./src/main/resources/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    healthcheck:
+      # -h localhost: solo responde cuando el servidor definitivo ya acepta
+      # conexiones de red, es decir, después de ejecutar schema.sql
+      test: ["CMD-SHELL", "pg_isready -h localhost -U ${DB_USERNAME:-postgres} -d ${DB_NAME:-oye_db}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # ─────────────────────────────────────────────────────────────
+  # API Spring Boot (imagen construida con el Dockerfile)
+  # ─────────────────────────────────────────────────────────────
+  api:
+    build: .
+    image: users-management:local
+    container_name: oye-api
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      # Dentro de la red de Compose, la base se llama "db", no "localhost"
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME:-oye_db}
+      DB_USERNAME: ${DB_USERNAME:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-postgres}
+    ports:
+      - "8080:8080"
+
+volumes:
+  pgdata:
