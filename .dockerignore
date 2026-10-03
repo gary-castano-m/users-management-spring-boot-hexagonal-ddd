@@ -1,0 +1,24 @@
+# ─────────────────────────────────────────────
+# Archivos que NO se envían al contexto de Docker
+# ─────────────────────────────────────────────
+
+# Compilaciones locales: la imagen compila desde cero
+target/
+*.log
+
+# Control de versiones e IDEs
+.git/
+.idea/
+.vscode/
+*.iml
+
+# Secretos: nunca deben entrar a una imagen
+.env
+.env.*
+
+# Maven Wrapper y scripts de Windows: dentro de Docker se usa mvn
+.mvn/
+mvnw
+mvnw.cmd
+mvnw.ps1
+setup-maven-path.ps1
