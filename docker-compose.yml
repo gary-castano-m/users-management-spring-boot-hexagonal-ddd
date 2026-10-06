@@ -49,6 +49,12 @@ services:
       DB_NAME: ${DB_NAME:-oye_db}
       DB_USERNAME: ${DB_USERNAME:-postgres}
       DB_PASSWORD: ${DB_PASSWORD:-postgres}
+      # Proveedor de correo: por defecto smtp; con un archivo .env en la raíz
+      # (ignorado por Git) se puede activar brevo y pasar la API key.
+      EMAIL_PROVIDER: ${EMAIL_PROVIDER:-smtp}
+      BREVO_API_KEY: ${BREVO_API_KEY:-}
+      BREVO_SENDER_EMAIL: ${BREVO_SENDER_EMAIL:-}
+      BREVO_SENDER_NAME: ${BREVO_SENDER_NAME:-Oye! - Organiza tus gastos}
     ports:
       - "8080:8080"
 
