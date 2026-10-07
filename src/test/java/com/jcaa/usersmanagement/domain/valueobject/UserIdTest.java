@@ -3,6 +3,7 @@ package com.jcaa.usersmanagement.domain.valueobject;
 import static org.junit.jupiter.api.Assertions.*;
 
 import com.jcaa.usersmanagement.domain.exception.InvalidUserIdException;
+import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -38,4 +39,23 @@ class UserIdTest {
     // Act & Assert
     assertThrows(InvalidUserIdException.class, () -> new UserId(input));
   }
+
+     // --- Generación de identidad ---
+
+     @Test
+     @DisplayName("Should generate a valid UUID with the generate() factory")
+     void shouldGenerateValidUuid() {
+       // Act
+       final UserId userId = UserId.generate();
+
+       // Assert — UUID.fromString lanza una excepción si el formato no es válido
+       assertDoesNotThrow(() -> UUID.fromString(userId.value()));
+     }
+
+     @Test
+     @DisplayName("Should generate different identifiers on each call")
+     void shouldGenerateUniqueIdentifiers() {
+       // Act & Assert
+       assertNotEquals(UserId.generate(), UserId.generate());
+     }
 }
