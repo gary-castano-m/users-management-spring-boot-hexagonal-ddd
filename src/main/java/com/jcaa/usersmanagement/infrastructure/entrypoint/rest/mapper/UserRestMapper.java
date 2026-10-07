@@ -4,9 +4,11 @@ import com.jcaa.usersmanagement.application.service.dto.command.CreateUserComman
 import com.jcaa.usersmanagement.application.service.dto.command.DeleteUserCommand;
 import com.jcaa.usersmanagement.application.service.dto.command.UpdateUserCommand;
 import com.jcaa.usersmanagement.application.service.dto.query.GetUserByIdQuery;
+import com.jcaa.usersmanagement.domain.enums.UserRole;
 import com.jcaa.usersmanagement.domain.model.UserModel;
 import com.jcaa.usersmanagement.domain.valueobject.UserId;
 import com.jcaa.usersmanagement.infrastructure.entrypoint.rest.dto.request.CreateUserRestRequest;
+import com.jcaa.usersmanagement.infrastructure.entrypoint.rest.dto.request.RegisterRestRequest;
 import com.jcaa.usersmanagement.infrastructure.entrypoint.rest.dto.request.UpdateUserRestRequest;
 import com.jcaa.usersmanagement.infrastructure.entrypoint.rest.dto.response.UserRestResponse;
 import lombok.experimental.UtilityClass;
@@ -15,6 +17,10 @@ import java.util.List;
 
 @UtilityClass
 public class UserRestMapper {
+
+     // El registro público siempre crea usuarios MEMBER: quien se registra
+     // no puede elegir su rol (evita que alguien se registre como ADMIN).
+  private static final String SELF_REGISTRATION_ROLE = UserRole.MEMBER.name();
 
   public CreateUserCommand toCreateCommand(final CreateUserRestRequest request) {
     return new CreateUserCommand(
@@ -25,6 +31,15 @@ public class UserRestMapper {
         request.password(),
         request.role());
   }
+
+  public CreateUserCommand toRegisterCommand(final RegisterRestRequest request) {
+       return new CreateUserCommand(
+           UserId.generate().value(),
+           request.name(),
+           request.email(),
+           request.password(),
+           SELF_REGISTRATION_ROLE);
+     }
 
   public UpdateUserCommand toUpdateCommand(final String id, final UpdateUserRestRequest request) {
     return new UpdateUserCommand(
