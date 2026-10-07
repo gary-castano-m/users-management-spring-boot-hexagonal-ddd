@@ -5,6 +5,7 @@ import com.jcaa.usersmanagement.application.service.dto.command.DeleteUserComman
 import com.jcaa.usersmanagement.application.service.dto.command.UpdateUserCommand;
 import com.jcaa.usersmanagement.application.service.dto.query.GetUserByIdQuery;
 import com.jcaa.usersmanagement.domain.model.UserModel;
+import com.jcaa.usersmanagement.domain.valueobject.UserId;
 import com.jcaa.usersmanagement.infrastructure.entrypoint.rest.dto.request.CreateUserRestRequest;
 import com.jcaa.usersmanagement.infrastructure.entrypoint.rest.dto.request.UpdateUserRestRequest;
 import com.jcaa.usersmanagement.infrastructure.entrypoint.rest.dto.response.UserRestResponse;
@@ -17,7 +18,8 @@ public class UserRestMapper {
 
   public CreateUserCommand toCreateCommand(final CreateUserRestRequest request) {
     return new CreateUserCommand(
-        request.id(),
+        // El id lo genera el servidor, no el cliente
+        UserId.generate().value(),
         request.name(),
         request.email(),
         request.password(),
