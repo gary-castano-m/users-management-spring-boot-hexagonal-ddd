@@ -23,6 +23,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -127,4 +128,24 @@ class CreateUserServiceTest {
     assertThrows(ConstraintViolationException.class, () -> service.execute(command));
     verifyNoInteractions(saveUserPort, getUserByEmailPort, emailNotificationService);
   }
+
+     // ── estado inicial del usuario
+
+     @Test
+     @DisplayName("execute() guarda al usuario en estado ACTIVE")
+     void shouldSaveUserAsActive() {
+       // Arrange
+       final CreateUserCommand command =
+           new CreateUserCommand("u-03", "Ana Torres", "ana@example.com", "Pass1234", "MEMBER");
+       final ArgumentCaptor<UserModel> captor = ArgumentCaptor.forClass(UserModel.class);
+       when(getUserByEmailPort.getByEmail(any())).thenReturn(Optional.empty());
+       when(saveUserPort.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+       // Act
+       service.execute(command);
+
+       // Assert
+       verify(saveUserPort).save(captor.capture());
+       assertEquals(UserStatus.ACTIVE, captor.getValue().getStatus());
+     }
 }
