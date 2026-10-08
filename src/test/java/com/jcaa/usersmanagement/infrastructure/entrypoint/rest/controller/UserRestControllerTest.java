@@ -84,13 +84,13 @@ class UserRestControllerTest {
   }
 
   @Test
+  @WithMockUser(roles = "ADMIN")
   @DisplayName("POST /api/users debe rechazar una solicitud inválida antes del caso de uso")
   void shouldRejectInvalidCreateRequest() throws Exception {
     // Arrange
     final String invalidRequest =
         """
         {
-          "id": "",
           "name": "A",
           "email": "invalid",
           "password": "short",
