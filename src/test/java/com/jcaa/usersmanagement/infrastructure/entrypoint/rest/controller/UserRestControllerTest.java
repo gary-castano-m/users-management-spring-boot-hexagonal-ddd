@@ -84,13 +84,13 @@ class UserRestControllerTest {
   }
 
   @Test
+  @WithMockUser(roles = "ADMIN")
   @DisplayName("POST /api/users debe rechazar una solicitud inválida antes del caso de uso")
   void shouldRejectInvalidCreateRequest() throws Exception {
     // Arrange
     final String invalidRequest =
         """
         {
-          "id": "",
           "name": "A",
           "email": "invalid",
           "password": "short",
@@ -128,5 +128,38 @@ class UserRestControllerTest {
         .perform(get("/api/users/{id}", ID))
         .andExpect(status().isForbidden())
         .andExpect(jsonPath("$.status").value(403));
+  }
+
+  // ── POST /api/users reservado al ADMIN
+
+  private static final String VALID_CREATE_REQUEST =
+      """
+      {
+        "name": "Ana Torres",
+        "email": "ana@example.com",
+        "password": "Pass1234",
+        "role": "MEMBER"
+      }
+      """;
+
+  @Test
+  @DisplayName("POST /api/users debe requerir autenticacion")
+  void shouldRejectUnauthenticatedCreate() throws Exception {
+    // Act & Assert
+    mockMvc
+        .perform(
+            post("/api/users").contentType(MediaType.APPLICATION_JSON).content(VALID_CREATE_REQUEST))
+        .andExpect(status().isUnauthorized());
+  }
+
+  @Test
+  @WithMockUser(roles = "MEMBER")
+  @DisplayName("POST /api/users debe rechazar a un usuario que no es ADMIN")
+  void shouldRejectCreateByNonAdmin() throws Exception {
+    // Act & Assert
+    mockMvc
+        .perform(
+            post("/api/users").contentType(MediaType.APPLICATION_JSON).content(VALID_CREATE_REQUEST))
+        .andExpect(status().isForbidden());
   }
 }

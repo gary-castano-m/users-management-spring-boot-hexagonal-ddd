@@ -34,7 +34,13 @@ public class CreateUserService implements CreateUserUseCase {
     final UserEmail email = new UserEmail(command.email());
     ensureEmailIsNotTaken(email);
 
-    final UserModel userToSave = UserApplicationMapper.fromCreateCommandToModel(command);
+        // ─────────────────────────────────────────────────────────────────────────
+    // En Oye!, quien se registra queda activo de inmediato. El usuario nace
+    // PENDING (regla del dominio en UserModel.create) y este caso de uso
+    // lo activa de forma explícita.
+    // ─────────────────────────────────────────────────────────────────────────
+    final UserModel userToSave =
+        UserApplicationMapper.fromCreateCommandToModel(command).activate();
     final UserModel savedUser = saveUserPort.save(userToSave);
 
     emailNotificationService.notifyUserCreated(savedUser, command.password());
