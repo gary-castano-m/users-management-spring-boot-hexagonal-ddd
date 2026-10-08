@@ -51,6 +51,27 @@ class AuthRestControllerTest {
     verify(loginUseCase).execute(command);
   }
 
+  @Test
+  void shouldReturnAuthenticatedUserDataForTheClient() {
+    // Arrange
+    final UserModel user = activeUser();
+    when(loginUseCase.execute(new LoginCommand(EMAIL, PASSWORD))).thenReturn(user);
+    when(jwtTokenService.generate(user)).thenReturn("signed.jwt.token");
+    when(jwtTokenService.expirationSeconds()).thenReturn(900L);
+    final AuthRestController controller = new AuthRestController(loginUseCase, jwtTokenService);
+
+    // Act
+    final LoginRestResponse response =
+        controller.login(new LoginRestRequest(EMAIL, PASSWORD));
+
+    // Assert — el cliente necesita id, nombre y rol para decidir a qué pantalla ir
+    assertThat(response.user().id()).isEqualTo("user-001");
+    assertThat(response.user().name()).isEqualTo("Test User");
+    assertThat(response.user().email()).isEqualTo(EMAIL);
+    assertThat(response.user().role()).isEqualTo("ADMIN");
+    assertThat(response.user().status()).isEqualTo("ACTIVE");
+  }
+
   private static UserModel activeUser() {
     return new UserModel(
         new UserId("user-001"),

@@ -5,6 +5,7 @@ import com.jcaa.usersmanagement.application.service.dto.command.LoginCommand;
 import com.jcaa.usersmanagement.domain.model.UserModel;
 import com.jcaa.usersmanagement.infrastructure.entrypoint.rest.dto.request.LoginRestRequest;
 import com.jcaa.usersmanagement.infrastructure.entrypoint.rest.dto.response.LoginRestResponse;
+import com.jcaa.usersmanagement.infrastructure.entrypoint.rest.mapper.UserRestMapper;
 import com.jcaa.usersmanagement.infrastructure.security.JwtTokenService;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
@@ -29,6 +30,9 @@ public class AuthRestController {
   public LoginRestResponse login(@Valid @RequestBody final LoginRestRequest request) {
     final UserModel user = loginUseCase.execute(new LoginCommand(request.email(), request.password()));
     return new LoginRestResponse(
-        jwtTokenService.generate(user), BEARER_TOKEN_TYPE, jwtTokenService.expirationSeconds());
+           jwtTokenService.generate(user),
+           BEARER_TOKEN_TYPE,
+           jwtTokenService.expirationSeconds(),
+           UserRestMapper.toResponse(user));
   }
 }
