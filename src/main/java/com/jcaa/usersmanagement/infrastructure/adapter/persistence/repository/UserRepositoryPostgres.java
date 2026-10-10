@@ -5,7 +5,9 @@ import com.jcaa.usersmanagement.application.port.out.GetAllUsersPort;
 import com.jcaa.usersmanagement.application.port.out.GetUserByEmailPort;
 import com.jcaa.usersmanagement.application.port.out.GetUserByIdPort;
 import com.jcaa.usersmanagement.application.port.out.SaveUserPort;
+import com.jcaa.usersmanagement.application.port.out.SearchUsersPort;
 import com.jcaa.usersmanagement.application.port.out.UpdateUserPort;
+import com.jcaa.usersmanagement.domain.enums.UserRole;
 import com.jcaa.usersmanagement.domain.exception.UserNotFoundException;
 import com.jcaa.usersmanagement.domain.model.UserModel;
 import com.jcaa.usersmanagement.domain.valueobject.UserEmail;
@@ -22,6 +24,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -34,7 +37,8 @@ public class UserRepositoryPostgres
         GetUserByIdPort,
         GetUserByEmailPort,
         GetAllUsersPort,
-        DeleteUserPort {
+        DeleteUserPort,
+        SearchUsersPort {
 
   private static final String SQL_INSERT =
       "INSERT INTO users "
@@ -63,6 +67,14 @@ public class UserRepositoryPostgres
   private static final String SQL_DELETE =
         "DELETE FROM users "
         + "WHERE id = ?";
+
+  // ── Reportes: búsqueda con filtros opcionales (el WHERE se arma en search())
+  private static final String SQL_SEARCH_BASE =
+      "SELECT id, name, email, password, role, status, created_at, updated_at "
+      + "FROM users";
+
+  private static final String SQL_ORDER_BY_NAME = " ORDER BY name ASC";
+
 
   private final DataSource dataSource;
 
@@ -129,6 +141,43 @@ public class UserRepositoryPostgres
       statement.executeUpdate();
     } catch (final SQLException exception) {
       throw PersistenceException.becauseDeleteFailed(userId.value(), exception);
+    }
+  }
+
+  // ───────────────────────────────────────────────────────────────────────────
+  // Búsqueda para los reportes. Los filtros son opcionales (null = sin filtro)
+  // y el WHERE se arma solo con los que llegan. Los VALORES nunca se concatenan
+  // en el SQL: viajan como parámetros (?), lo que previene la inyección SQL.
+  // ───────────────────────────────────────────────────────────────────────────
+  @Override
+  public List<UserModel> search(final UserRole role, final String nameFragment) {
+    final List<String> conditions = new ArrayList<>();
+    final List<String> parameters = new ArrayList<>();
+
+    if (role != null) {
+      conditions.add("role = ?");
+      parameters.add(role.name());
+    }
+    if (nameFragment != null && !nameFragment.isBlank()) {
+      // ILIKE: coincidencia parcial sin distinguir mayúsculas (propio de PostgreSQL)
+      conditions.add("name ILIKE ?");
+      parameters.add("%" + nameFragment.trim() + "%");
+    }
+
+    final String sql =
+        SQL_SEARCH_BASE
+            + (conditions.isEmpty() ? "" : " WHERE " + String.join(" AND ", conditions))
+            + SQL_ORDER_BY_NAME;
+
+    try (final Connection connection = dataSource.getConnection();
+        final PreparedStatement statement = connection.prepareStatement(sql)) {
+      for (int index = 0; index < parameters.size(); index++) {
+        statement.setString(index + 1, parameters.get(index));
+      }
+      final ResultSet resultSet = statement.executeQuery();
+      return UserPersistenceMapper.fromResultSetToModelList(resultSet);
+    } catch (final SQLException exception) {
+      throw PersistenceException.becauseFindAllFailed(exception);
     }
   }
 
