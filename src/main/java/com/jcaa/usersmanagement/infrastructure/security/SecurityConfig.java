@@ -15,6 +15,7 @@ public class SecurityConfig {
 
   private static final String AUTH_LOGIN_PATH = "/api/auth/login";
   private static final String AUTH_REGISTER_PATH = "/api/auth/register";
+  private static final String SELF_PROFILE_PATH = "/api/users/me";
   private static final String USERS_PATH = "/api/users";
   private static final String USERS_DETAIL_PATH = "/api/users/**";
   private static final String[] OPEN_API_PATHS = {
@@ -45,8 +46,11 @@ public class SecurityConfig {
                     .permitAll()
                     .requestMatchers(OPEN_API_PATHS)
                     .permitAll()
-                    // Crear usuarios con rol a elección es solo para el ADMIN;
-                    // el registro público va por /api/auth/register (siempre MEMBER)
+           // Perfil propio: cualquier usuario autenticado, solo sobre sí mismo.
+           // Va ANTES de las reglas de /api/users/**: Spring aplica la primera
+           // regla que coincide, y /api/users/me también coincide con /api/users/**.
+                    .requestMatchers(SELF_PROFILE_PATH)
+                    .authenticated()
                     .requestMatchers(HttpMethod.POST, USERS_PATH)
                     .hasRole("ADMIN")
                     .requestMatchers(HttpMethod.GET, USERS_PATH, USERS_DETAIL_PATH)
