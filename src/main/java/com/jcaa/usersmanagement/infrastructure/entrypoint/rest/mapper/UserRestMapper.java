@@ -9,6 +9,7 @@ import com.jcaa.usersmanagement.domain.model.UserModel;
 import com.jcaa.usersmanagement.domain.valueobject.UserId;
 import com.jcaa.usersmanagement.infrastructure.entrypoint.rest.dto.request.CreateUserRestRequest;
 import com.jcaa.usersmanagement.infrastructure.entrypoint.rest.dto.request.RegisterRestRequest;
+import com.jcaa.usersmanagement.infrastructure.entrypoint.rest.dto.request.UpdateProfileRestRequest;
 import com.jcaa.usersmanagement.infrastructure.entrypoint.rest.dto.request.UpdateUserRestRequest;
 import com.jcaa.usersmanagement.infrastructure.entrypoint.rest.dto.response.UserRestResponse;
 import lombok.experimental.UtilityClass;
@@ -50,6 +51,22 @@ public class UserRestMapper {
         request.role(),
         request.status());
   }
+
+     // ─────────────────────────────────────────────────────────────────────────
+     // Edición del perfil propio: el id, el rol y el estado se toman del
+     // usuario actual, nunca del cliente. Así un MEMBER no puede ascenderse
+     // a ADMIN ni reactivar una cuenta desactivada.
+     // ─────────────────────────────────────────────────────────────────────────
+     public UpdateUserCommand toSelfUpdateCommand(
+         final UserModel current, final UpdateProfileRestRequest request) {
+       return new UpdateUserCommand(
+           current.getId().value(),
+           request.name(),
+           request.email(),
+           request.password(),
+           current.getRole().name(),
+           current.getStatus().name());
+     }
 
   public GetUserByIdQuery toGetByIdQuery(final String id) {
     return new GetUserByIdQuery(id);
