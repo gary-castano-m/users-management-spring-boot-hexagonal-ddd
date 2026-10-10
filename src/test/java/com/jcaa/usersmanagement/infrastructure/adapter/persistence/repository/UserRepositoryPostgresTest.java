@@ -24,6 +24,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -424,5 +425,46 @@ class UserRepositoryPostgresTest {
         PersistenceException.class,
         () -> repository.delete(userId),
         "must throw PersistenceException when DELETE raises SQLException");
+  }
+
+  // ── search() — reportes con SQL parametrizado
+
+  @Test
+  @DisplayName("search() filtra por rol enviando el valor como parametro, no dentro del SQL")
+  void shouldSearchByRoleUsingParameters() throws SQLException {
+    // Arrange
+    configureStatementAndResultSet();
+    when(resultSet.next()).thenReturn(true, false);
+    configureResultSetRow();
+    final ArgumentCaptor<String> sqlCaptor = ArgumentCaptor.forClass(String.class);
+
+    // Act
+    final List<UserModel> result = repository.search(UserRole.ADMIN, null);
+
+    // Assert
+    verify(connection).prepareStatement(sqlCaptor.capture());
+    verify(statement).setString(1, "ADMIN");
+    final String sql = sqlCaptor.getValue();
+    assertAll(
+        "search() by role",
+        () -> assertEquals(1, result.size()),
+        () -> assertTrue(sql.contains("role = ?"), "el rol debe filtrarse con un parametro"),
+        () -> assertFalse(sql.contains("ADMIN"), "el valor no debe ir pegado en el SQL"),
+        () -> assertFalse(sql.contains("ILIKE"), "sin nombre no debe filtrar por nombre"));
+  }
+
+  @Test
+  @DisplayName("search() busca por fragmento de nombre con ILIKE y comodines")
+  void shouldSearchByNameFragment() throws SQLException {
+    // Arrange
+    configureStatementAndResultSet();
+    when(resultSet.next()).thenReturn(false);
+
+    // Act
+    final List<UserModel> result = repository.search(null, "  ana  ");
+
+    // Assert
+    verify(statement).setString(1, "%ana%");
+    assertTrue(result.isEmpty());
   }
 }
