@@ -34,4 +34,12 @@ public class UserModel {
   public UserModel deactivate() {
     return new UserModel(id, name, email, password, role, UserStatus.INACTIVE);
   }
+
+  /**
+   * Devuelve una copia del usuario con una nueva contraseña (ya cifrada). El resto de datos no
+   * cambia. Se usa en la recuperación de contraseña.
+   */
+  public UserModel changePassword(final UserPassword newPassword) {
+    return new UserModel(id, name, email, newPassword, role, status);
+  }
 }
