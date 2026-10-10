@@ -99,4 +99,27 @@ class UserModelTest {
         () -> assertSame(userId, deactivated.getId(), "id debe preservarse"),
         () -> assertEquals(UserRole.ADMIN, deactivated.getRole(), "role debe preservarse"));
   }
+
+  // ── changePassword()
+
+  @Test
+  @DisplayName("changePassword() debe reemplazar solo la contraseña y conservar los demás campos")
+  void shouldChangePasswordAndPreserveOtherFields() {
+    // Arrange
+    final UserModel active =
+        new UserModel(userId, userName, userEmail, password, UserRole.MEMBER, UserStatus.ACTIVE);
+    final UserPassword newPassword = UserPassword.fromHash("$2a$12$nuevoHashDePruebaXXXXXX");
+
+    // Act
+    final UserModel changed = active.changePassword(newPassword);
+
+    // Assert
+    assertAll(
+        "resultado de changePassword()",
+        () -> assertNotSame(active, changed, "debe ser una nueva instancia"),
+        () -> assertSame(newPassword, changed.getPassword(), "password debe ser la nueva"),
+        () -> assertSame(userId, changed.getId(), "id debe preservarse"),
+        () -> assertEquals(UserRole.MEMBER, changed.getRole(), "role debe preservarse"),
+        () -> assertEquals(UserStatus.ACTIVE, changed.getStatus(), "status debe preservarse"));
+  }
 }
