@@ -21,6 +21,7 @@ public class EmailNotificationService {
 
   private static final String SUBJECT_CREATED = "Tu cuenta ha sido creada — Gestion de Usuarios";
   private static final String SUBJECT_UPDATED  = "Tu cuenta ha sido actualizada — Gestion de Usuarios";
+  private static final String SUBJECT_PASSWORD_RESET = "Recuperacion de contraseña — Oye!";
 
   private static final String TOKEN_NAME     = "name";
   private static final String TOKEN_EMAIL    = "email";
@@ -58,6 +59,19 @@ public class EmailNotificationService {
                 TOKEN_ROLE,   user.getRole().name(),
                 TOKEN_STATUS, user.getStatus().name()));
     final EmailDestinationModel destination = buildDestination(user, SUBJECT_UPDATED, body);
+    sendOrLog(destination);
+  }
+
+  public void notifyPasswordReset(final UserModel user, final String temporaryPassword) {
+    final String template = loadTemplate("password-reset.html");
+    final String body =
+        renderTemplate(
+            template,
+            Map.of(
+                TOKEN_NAME,     user.getName().value(),
+                TOKEN_PASSWORD, temporaryPassword));
+    final EmailDestinationModel destination =
+        buildDestination(user, SUBJECT_PASSWORD_RESET, body);
     sendOrLog(destination);
   }
 
