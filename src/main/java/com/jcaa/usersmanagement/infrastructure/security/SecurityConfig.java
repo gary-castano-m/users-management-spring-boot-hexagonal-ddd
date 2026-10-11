@@ -15,6 +15,7 @@ public class SecurityConfig {
 
   private static final String AUTH_LOGIN_PATH = "/api/auth/login";
   private static final String AUTH_REGISTER_PATH = "/api/auth/register";
+  private static final String AUTH_FORGOT_PASSWORD_PATH = "/api/auth/forgot-password";
   private static final String SELF_PROFILE_PATH = "/api/users/me";
   private static final String USERS_PATH = "/api/users";
   private static final String USERS_DETAIL_PATH = "/api/users/**";
@@ -42,7 +43,7 @@ public class SecurityConfig {
         .authorizeHttpRequests(
             authorization ->
                 authorization
-                    .requestMatchers(AUTH_LOGIN_PATH, AUTH_REGISTER_PATH)
+                    .requestMatchers(AUTH_LOGIN_PATH, AUTH_REGISTER_PATH, AUTH_FORGOT_PASSWORD_PATH)
                     .permitAll()
                     .requestMatchers(OPEN_API_PATHS)
                     .permitAll()
