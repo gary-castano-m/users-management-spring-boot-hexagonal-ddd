@@ -98,6 +98,29 @@ class EmailNotificationServiceTest {
                         && dest.getSubject().contains("actualizada")));
   }
 
+  // ── notifyPasswordReset() — flujo feliz con la plantilla real
+
+  @Test
+  @DisplayName("notifyPasswordReset() envía la contraseña temporal al email del usuario")
+  void shouldSendPasswordResetWithTemporaryPassword() {
+    // Arrange
+    final String temporaryPassword = "Tmp7kQ2xR9aB";
+
+    // Act
+    service.notifyPasswordReset(user, temporaryPassword);
+
+    // Assert — asunto de recuperación, contraseña en el cuerpo y sin tokens sin reemplazar
+    verify(emailSenderPort)
+        .send(
+            argThat(
+                dest ->
+                    EMAIL.equals(dest.getDestinationEmail())
+                        && dest.getSubject().contains("Recuperacion")
+                        && dest.getBody().contains(temporaryPassword)
+                        && dest.getBody().contains(NAME)
+                        && !dest.getBody().contains("{{")));
+  }
+
   // ── re-lanzar EmailSenderException en notifyUserCreated
 
   @Test
