@@ -9,6 +9,7 @@ public final class PersistenceException extends RuntimeException {
   private static final String MESSAGE_ALL = "Failed to retrieve all users.";
   private static final String MESSAGE_DELETE = "Failed to delete user with ID: '%s'.";
   private static final String MESSAGE_CONNECTION = "Could not establish database connection.";
+  private static final String MESSAGE_GASTO = "Failed to %s expense: '%s'.";
 
   private PersistenceException(final String message, final Throwable cause) {
     super(message, cause);
@@ -44,5 +45,14 @@ public final class PersistenceException extends RuntimeException {
 
   public static PersistenceException becauseConnectionFailed(final Throwable cause) {
     return new PersistenceException(MESSAGE_CONNECTION, cause);
+  }
+
+  /**
+   * Falla de una operación sobre la tabla gastos. operation: save, update, delete, find o search;
+   * detail: el id del gasto o una descripción del filtro.
+   */
+  public static PersistenceException becauseGastoOperationFailed(
+      final String operation, final String detail, final Throwable cause) {
+    return new PersistenceException(String.format(MESSAGE_GASTO, operation, detail), cause);
   }
 }
