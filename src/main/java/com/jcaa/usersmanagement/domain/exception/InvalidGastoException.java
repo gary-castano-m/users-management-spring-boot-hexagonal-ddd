@@ -15,6 +15,8 @@ public final class InvalidGastoException extends DomainException {
   private static final String MESSAGE_FIELD_EMPTY = "The expense %s must not be empty.";
   private static final String MESSAGE_FIELD_TOO_LONG =
       "The expense %s must have at most %d characters.";
+  private static final String MESSAGE_INVALID_DATE_RANGE =
+      "The start date must not be after the end date.";
   private static final String MESSAGE_INCONSISTENT_TOTALS =
       "The expense total must be equal to the value without VAT plus the VAT.";
 
@@ -53,5 +55,9 @@ public final class InvalidGastoException extends DomainException {
 
   public static InvalidGastoException becauseTotalsAreInconsistent() {
     return new InvalidGastoException(MESSAGE_INCONSISTENT_TOTALS);
+  }
+
+  public static InvalidGastoException becauseDateRangeIsInvalid() {
+    return new InvalidGastoException(MESSAGE_INVALID_DATE_RANGE);
   }
 }
