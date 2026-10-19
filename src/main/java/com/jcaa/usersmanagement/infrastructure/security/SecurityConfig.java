@@ -17,6 +17,8 @@ public class SecurityConfig {
   private static final String AUTH_REGISTER_PATH = "/api/auth/register";
   private static final String AUTH_FORGOT_PASSWORD_PATH = "/api/auth/forgot-password";
   private static final String SELF_PROFILE_PATH = "/api/users/me";
+  private static final String GASTOS_PATH = "/api/gastos";
+  private static final String GASTOS_DETAIL_PATH = "/api/gastos/**";
   private static final String USERS_PATH = "/api/users";
   private static final String USERS_DETAIL_PATH = "/api/users/**";
   private static final String[] OPEN_API_PATHS = {
@@ -51,6 +53,10 @@ public class SecurityConfig {
            // Va ANTES de las reglas de /api/users/**: Spring aplica la primera
            // regla que coincide, y /api/users/me también coincide con /api/users/**.
                     .requestMatchers(SELF_PROFILE_PATH)
+                    .authenticated()
+           // Gastos: cualquier usuario autenticado. Qué gastos ve o modifica cada
+           // rol lo decide la capa de aplicación (GastoAccessPolicy).
+                    .requestMatchers(GASTOS_PATH, GASTOS_DETAIL_PATH)
                     .authenticated()
                     .requestMatchers(HttpMethod.POST, USERS_PATH)
                     .hasRole("ADMIN")
