@@ -28,7 +28,7 @@ public class AuthRestController {
   @PostMapping("/login")
   @Operation(summary = "Autenticar usuario y obtener un token JWT")
   public LoginRestResponse login(@Valid @RequestBody final LoginRestRequest request) {
-    final UserModel user = loginUseCase.execute(new LoginCommand(request.email(), request.password()));
+    final UserModel user = loginUseCase.execute(new LoginCommand(request.usuario(), request.password()));
     return new LoginRestResponse(
            jwtTokenService.generate(user),
            BEARER_TOKEN_TYPE,
