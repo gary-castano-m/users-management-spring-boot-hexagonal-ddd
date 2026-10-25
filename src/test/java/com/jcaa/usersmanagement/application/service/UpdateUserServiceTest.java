@@ -16,6 +16,7 @@ import com.jcaa.usersmanagement.domain.model.UserModel;
 import com.jcaa.usersmanagement.domain.valueobject.UserEmail;
 import com.jcaa.usersmanagement.domain.valueobject.UserId;
 import com.jcaa.usersmanagement.domain.valueobject.UserName;
+import com.jcaa.usersmanagement.domain.valueobject.UserUsername;
 import com.jcaa.usersmanagement.domain.valueobject.UserPassword;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Validation;
@@ -66,6 +67,7 @@ class UpdateUserServiceTest {
     existingUser =
         new UserModel(
             new UserId(ID),
+            new UserUsername("john.arrieta"),
             new UserName("John Arrieta"),
             new UserEmail(EMAIL),
             UserPassword.fromHash(HASH),
@@ -80,7 +82,7 @@ class UpdateUserServiceTest {
   void shouldUpdateUserAndNotifyWhenDataIsValid() {
     // Arrange
     final UpdateUserCommand command =
-        new UpdateUserCommand(ID, "John Updated", EMAIL, null, "ADMIN", "ACTIVE");
+        new UpdateUserCommand(ID, "john.updated", "John Updated", EMAIL, null, "ADMIN", "ACTIVE");
 
     when(getUserByIdPort.getById(any())).thenReturn(Optional.of(existingUser));
     when(getUserByEmailPort.getByEmail(any())).thenReturn(Optional.of(existingUser));
@@ -102,7 +104,7 @@ class UpdateUserServiceTest {
   void shouldThrowWhenUserNotFound() {
     // Arrange
     final UpdateUserCommand command =
-        new UpdateUserCommand("no-existe", "Name", "a@b.com", null, "MEMBER", "ACTIVE");
+        new UpdateUserCommand("no-existe", "name", "Name", "a@b.com", null, "MEMBER", "ACTIVE");
 
     when(getUserByIdPort.getById(any())).thenReturn(Optional.empty());
 
@@ -119,11 +121,12 @@ class UpdateUserServiceTest {
   void shouldThrowWhenEmailBelongsToAnotherUser() {
     // Arrange
     final UpdateUserCommand command =
-        new UpdateUserCommand(ID, "John", "other@example.com", null, "MEMBER", "ACTIVE");
+        new UpdateUserCommand(ID, "john", "John", "other@example.com", null, "MEMBER", "ACTIVE");
 
     final UserModel otherUser =
         new UserModel(
             new UserId("u-999"),
+            new UserUsername("other.user"),
             new UserName("Other User"),
             new UserEmail("other@example.com"),
             UserPassword.fromHash(HASH),
@@ -145,7 +148,7 @@ class UpdateUserServiceTest {
   void shouldAllowKeepingOwnEmail() {
     // Arrange
     final UpdateUserCommand command =
-        new UpdateUserCommand(ID, "John Updated", EMAIL, null, "ADMIN", "ACTIVE");
+        new UpdateUserCommand(ID, "john.updated", "John Updated", EMAIL, null, "ADMIN", "ACTIVE");
 
     when(getUserByIdPort.getById(any())).thenReturn(Optional.of(existingUser));
     when(getUserByEmailPort.getByEmail(any())).thenReturn(Optional.of(existingUser));
@@ -164,7 +167,7 @@ class UpdateUserServiceTest {
   void shouldThrowWhenCommandIsInvalid() {
     // Arrange — id en blanco y email inválido
     final UpdateUserCommand command =
-        new UpdateUserCommand("", "Jo", "no-es-email", null, "MEMBER", "ACTIVE");
+        new UpdateUserCommand("", "usuario.test", "Jo", "no-es-email", null, "MEMBER", "ACTIVE");
 
     // Act & Assert
     assertThrows(ConstraintViolationException.class, () -> service.execute(command));

@@ -13,6 +13,7 @@ import com.jcaa.usersmanagement.domain.model.UserModel;
 import com.jcaa.usersmanagement.domain.valueobject.UserEmail;
 import com.jcaa.usersmanagement.domain.valueobject.UserId;
 import com.jcaa.usersmanagement.domain.valueobject.UserName;
+import com.jcaa.usersmanagement.domain.valueobject.UserUsername;
 import com.jcaa.usersmanagement.domain.valueobject.UserPassword;
 import com.jcaa.usersmanagement.infrastructure.entrypoint.rest.dto.request.RegisterRestRequest;
 import com.jcaa.usersmanagement.infrastructure.entrypoint.rest.dto.response.UserRestResponse;
@@ -45,6 +46,7 @@ class RegisterRestControllerTest {
     final UserModel created =
         new UserModel(
             new UserId("u-100"),
+            new UserUsername("ana.torres"),
             new UserName("Ana Torres"),
             new UserEmail("ana@example.com"),
             UserPassword.fromPlainText("Pass1234"),
@@ -55,7 +57,9 @@ class RegisterRestControllerTest {
 
     // Act
     final UserRestResponse response =
-        controller.register(new RegisterRestRequest("Ana Torres", "ana@example.com", "Pass1234"));
+        controller.register(
+            new RegisterRestRequest(
+                "ana.torres", "Ana Torres", "ana@example.com", "Pass1234"));
 
     // Assert
     final CreateUserCommand command = captor.getValue();
@@ -64,6 +68,7 @@ class RegisterRestControllerTest {
         () -> assertEquals("MEMBER", command.role(), "el rol siempre es MEMBER"),
         () -> assertDoesNotThrow(() -> UUID.fromString(command.id()), "id generado (UUID)"),
         () -> assertEquals("ana@example.com", command.email()),
+        () -> assertEquals("ana.torres", command.username(), "el username viaja al comando"),
         () -> assertEquals("ACTIVE", response.status()));
   }
 }

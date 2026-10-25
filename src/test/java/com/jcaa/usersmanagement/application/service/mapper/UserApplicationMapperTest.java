@@ -24,6 +24,7 @@ import org.junit.jupiter.api.Test;
 class UserApplicationMapperTest {
 
   private static final String ID       = "u-001";
+  private static final String USERNAME = "john.arrieta";
   private static final String NAME     = "John Arrieta";
   private static final String EMAIL    = "john@example.com";
   private static final String PASSWORD = "SecurePass1";
@@ -36,7 +37,7 @@ class UserApplicationMapperTest {
   @DisplayName("fromCreateCommandToModel() mapea todos los campos y fija status PENDING")
   void shouldMapCreateCommandToModelWithPendingStatus() {
     // Arrange
-    final CreateUserCommand command = new CreateUserCommand(ID, NAME, EMAIL, PASSWORD, ROLE);
+    final CreateUserCommand command = new CreateUserCommand(ID, USERNAME, NAME, EMAIL, PASSWORD, ROLE);
 
     // Act
     final UserModel result = UserApplicationMapper.fromCreateCommandToModel(command);
@@ -45,6 +46,7 @@ class UserApplicationMapperTest {
     assertAll(
         "fromCreateCommandToModel()",
         () -> assertEquals(ID,              result.getId().value(),    "id"),
+        () -> assertEquals(USERNAME,        result.getUsername().value(), "username"),
         () -> assertEquals(NAME,            result.getName().value(),  "name"),
         () -> assertEquals(EMAIL,           result.getEmail().value(), "email"),
         () -> assertEquals(UserRole.ADMIN,  result.getRole(),          "role"),
@@ -61,7 +63,7 @@ class UserApplicationMapperTest {
     final String newPassword = "NuevoPass99";
     final UserPassword currentPassword = UserPassword.fromPlainText(PASSWORD);
     final UpdateUserCommand command =
-        new UpdateUserCommand(ID, NAME, EMAIL, newPassword, ROLE, STATUS);
+        new UpdateUserCommand(ID, USERNAME, NAME, EMAIL, newPassword, ROLE, STATUS);
 
     // Act
     final UserModel result =
@@ -71,6 +73,7 @@ class UserApplicationMapperTest {
     assertAll(
         "fromUpdateCommandToModel() con nueva contraseña",
         () -> assertEquals(ID,              result.getId().value(),    "id"),
+        () -> assertEquals(USERNAME,        result.getUsername().value(), "username"),
         () -> assertEquals(NAME,            result.getName().value(),  "name"),
         () -> assertEquals(EMAIL,           result.getEmail().value(), "email"),
         () -> assertEquals(UserRole.ADMIN,  result.getRole(),          "role"),
@@ -87,7 +90,7 @@ class UserApplicationMapperTest {
     // Arrange
     final UserPassword currentPassword = UserPassword.fromPlainText(PASSWORD);
     final UpdateUserCommand command =
-        new UpdateUserCommand(ID, NAME, EMAIL, null, ROLE, STATUS);
+        new UpdateUserCommand(ID, USERNAME, NAME, EMAIL, null, ROLE, STATUS);
 
     // Act
     final UserModel result =
@@ -106,7 +109,7 @@ class UserApplicationMapperTest {
     // Arrange
     final UserPassword currentPassword = UserPassword.fromPlainText(PASSWORD);
     final UpdateUserCommand command =
-        new UpdateUserCommand(ID, NAME, EMAIL, "   ", ROLE, STATUS);
+        new UpdateUserCommand(ID, USERNAME, NAME, EMAIL, "   ", ROLE, STATUS);
 
     // Act
     final UserModel result =

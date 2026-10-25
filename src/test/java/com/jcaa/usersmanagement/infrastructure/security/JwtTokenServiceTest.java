@@ -9,6 +9,7 @@ import com.jcaa.usersmanagement.domain.model.UserModel;
 import com.jcaa.usersmanagement.domain.valueobject.UserEmail;
 import com.jcaa.usersmanagement.domain.valueobject.UserId;
 import com.jcaa.usersmanagement.domain.valueobject.UserName;
+import com.jcaa.usersmanagement.domain.valueobject.UserUsername;
 import com.jcaa.usersmanagement.domain.valueobject.UserPassword;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
@@ -80,6 +81,7 @@ class JwtTokenServiceTest {
   private static UserModel activeUser() {
     return new UserModel(
         new UserId("user-001"),
+        new UserUsername("test.user"),
         new UserName("Test User"),
         new UserEmail("test@example.com"),
         UserPassword.fromPlainText("SecurePass1"),

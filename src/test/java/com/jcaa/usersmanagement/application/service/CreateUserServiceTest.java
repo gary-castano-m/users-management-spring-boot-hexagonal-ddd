@@ -14,6 +14,7 @@ import com.jcaa.usersmanagement.domain.model.UserModel;
 import com.jcaa.usersmanagement.domain.valueobject.UserEmail;
 import com.jcaa.usersmanagement.domain.valueobject.UserId;
 import com.jcaa.usersmanagement.domain.valueobject.UserName;
+import com.jcaa.usersmanagement.domain.valueobject.UserUsername;
 import com.jcaa.usersmanagement.domain.valueobject.UserPassword;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Validation;
@@ -61,11 +62,12 @@ class CreateUserServiceTest {
   void shouldSaveUserAndNotifyWhenEmailIsNew() {
     // Arrange
     final CreateUserCommand command =
-        new CreateUserCommand("u-01", "John Arrieta", "john@example.com", "Pass1234", "ADMIN");
+        new CreateUserCommand("u-01", "john.arrieta", "John Arrieta", "john@example.com", "Pass1234", "ADMIN");
 
     final UserModel savedUser =
         new UserModel(
             new UserId("u-01"),
+            new UserUsername("john.arrieta"),
             new UserName("John Arrieta"),
             new UserEmail("john@example.com"),
             UserPassword.fromPlainText("Pass1234"),
@@ -95,11 +97,12 @@ class CreateUserServiceTest {
   void shouldThrowWhenEmailAlreadyExists() {
     // Arrange
     final CreateUserCommand command =
-        new CreateUserCommand("u-02", "Jane Doe", "jane@example.com", "Pass5678", "MEMBER");
+        new CreateUserCommand("u-02", "jane.doe", "Jane Doe", "jane@example.com", "Pass5678", "MEMBER");
 
     final UserModel existing =
         new UserModel(
             new UserId("u-99"),
+            new UserUsername("jane.doe"),
             new UserName("Jane Doe"),
             new UserEmail("jane@example.com"),
             UserPassword.fromPlainText("OtraPass1"),
@@ -122,7 +125,7 @@ class CreateUserServiceTest {
   void shouldThrowWhenCommandIsInvalid() {
     // Arrange — id en blanco y email inválido
     final CreateUserCommand command =
-        new CreateUserCommand("", "Jo", "not-an-email", "short", "ADMIN");
+        new CreateUserCommand("", "usuario.test", "Jo", "not-an-email", "short", "ADMIN");
 
     // Act & Assert
     assertThrows(ConstraintViolationException.class, () -> service.execute(command));
@@ -136,7 +139,7 @@ class CreateUserServiceTest {
      void shouldSaveUserAsActive() {
        // Arrange
        final CreateUserCommand command =
-           new CreateUserCommand("u-03", "Ana Torres", "ana@example.com", "Pass1234", "MEMBER");
+           new CreateUserCommand("u-03", "ana.torres", "Ana Torres", "ana@example.com", "Pass1234", "MEMBER");
        final ArgumentCaptor<UserModel> captor = ArgumentCaptor.forClass(UserModel.class);
        when(getUserByEmailPort.getByEmail(any())).thenReturn(Optional.empty());
        when(saveUserPort.save(any())).thenAnswer(invocation -> invocation.getArgument(0));

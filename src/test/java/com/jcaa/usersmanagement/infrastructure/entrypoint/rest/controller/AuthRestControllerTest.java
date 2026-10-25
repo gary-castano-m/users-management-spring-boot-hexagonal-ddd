@@ -12,6 +12,7 @@ import com.jcaa.usersmanagement.domain.model.UserModel;
 import com.jcaa.usersmanagement.domain.valueobject.UserEmail;
 import com.jcaa.usersmanagement.domain.valueobject.UserId;
 import com.jcaa.usersmanagement.domain.valueobject.UserName;
+import com.jcaa.usersmanagement.domain.valueobject.UserUsername;
 import com.jcaa.usersmanagement.domain.valueobject.UserPassword;
 import com.jcaa.usersmanagement.infrastructure.entrypoint.rest.dto.request.LoginRestRequest;
 import com.jcaa.usersmanagement.infrastructure.entrypoint.rest.dto.response.LoginRestResponse;
@@ -66,6 +67,7 @@ class AuthRestControllerTest {
 
     // Assert — el cliente necesita id, nombre y rol para decidir a qué pantalla ir
     assertThat(response.user().id()).isEqualTo("user-001");
+    assertThat(response.user().username()).isEqualTo("test.user");
     assertThat(response.user().name()).isEqualTo("Test User");
     assertThat(response.user().email()).isEqualTo(EMAIL);
     assertThat(response.user().role()).isEqualTo("ADMIN");
@@ -75,6 +77,7 @@ class AuthRestControllerTest {
   private static UserModel activeUser() {
     return new UserModel(
         new UserId("user-001"),
+        new UserUsername("test.user"),
         new UserName("Test User"),
         new UserEmail(EMAIL),
         UserPassword.fromPlainText(PASSWORD),

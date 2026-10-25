@@ -11,6 +11,7 @@ import com.jcaa.usersmanagement.domain.model.UserModel;
 import com.jcaa.usersmanagement.domain.valueobject.UserEmail;
 import com.jcaa.usersmanagement.domain.valueobject.UserId;
 import com.jcaa.usersmanagement.domain.valueobject.UserName;
+import com.jcaa.usersmanagement.domain.valueobject.UserUsername;
 import com.jcaa.usersmanagement.domain.valueobject.UserPassword;
 import com.jcaa.usersmanagement.infrastructure.adapter.persistence.exception.PersistenceException;
 import java.sql.Connection;
@@ -41,6 +42,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class UserRepositoryPostgresTest {
 
   private static final String ID = "u-001";
+  private static final String USERNAME = "john.doe";
   private static final String NAME = "John Doe";
   private static final String EMAIL = "john@example.com";
   private static final String HASH = "$2a$12$abcdefghijklmnopqrstuO";
@@ -67,6 +69,7 @@ class UserRepositoryPostgresTest {
     userModel =
         new UserModel(
             userId,
+            new UserUsername(USERNAME),
             new UserName(NAME),
             userEmail,
             UserPassword.fromHash(HASH),
@@ -84,6 +87,7 @@ class UserRepositoryPostgresTest {
   // Helper: configure resultSet to return one full user row
   private void configureResultSetRow() throws SQLException {
     when(resultSet.getString("id")).thenReturn(ID);
+    when(resultSet.getString("username")).thenReturn(USERNAME);
     when(resultSet.getString("name")).thenReturn(NAME);
     when(resultSet.getString("email")).thenReturn(EMAIL);
     when(resultSet.getString("password")).thenReturn(HASH);
@@ -110,8 +114,11 @@ class UserRepositoryPostgresTest {
     assertAll(
         "save() happy path",
         () -> assertEquals(ID, result.getId().value(), "id"),
+        () -> assertEquals(USERNAME, result.getUsername().value(), "username"),
         () -> assertEquals(NAME, result.getName().value(), "name"),
         () -> assertEquals(EMAIL, result.getEmail().value(), "email"));
+    // el username se envía como segundo parámetro del INSERT
+    verify(statement).setString(2, USERNAME);
   }
 
   // ── save() — INSERT fails → PersistenceException

@@ -13,6 +13,7 @@ import com.jcaa.usersmanagement.domain.model.UserModel;
 import com.jcaa.usersmanagement.domain.valueobject.UserEmail;
 import com.jcaa.usersmanagement.domain.valueobject.UserId;
 import com.jcaa.usersmanagement.domain.valueobject.UserName;
+import com.jcaa.usersmanagement.domain.valueobject.UserUsername;
 import com.jcaa.usersmanagement.domain.valueobject.UserPassword;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Validation;
@@ -56,6 +57,7 @@ class GetUserByIdServiceTest {
     final UserModel expected =
         new UserModel(
             new UserId("u-001"),
+            new UserUsername("john.arrieta"),
             new UserName("John Arrieta"),
             new UserEmail("john@example.com"),
             UserPassword.fromHash("$2a$12$abcdefghijklmnopqrstuO"),

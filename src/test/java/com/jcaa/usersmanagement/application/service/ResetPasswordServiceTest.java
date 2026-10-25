@@ -13,6 +13,7 @@ import com.jcaa.usersmanagement.domain.model.UserModel;
 import com.jcaa.usersmanagement.domain.valueobject.UserEmail;
 import com.jcaa.usersmanagement.domain.valueobject.UserId;
 import com.jcaa.usersmanagement.domain.valueobject.UserName;
+import com.jcaa.usersmanagement.domain.valueobject.UserUsername;
 import com.jcaa.usersmanagement.domain.valueobject.UserPassword;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Validation;
@@ -125,6 +126,7 @@ class ResetPasswordServiceTest {
   private static UserModel user(final UserStatus status) {
     return new UserModel(
         new UserId("u-100"),
+        new UserUsername("ana.torres"),
         new UserName("Ana Torres"),
         new UserEmail(EMAIL),
         UserPassword.fromPlainText(OLD_PASSWORD),
