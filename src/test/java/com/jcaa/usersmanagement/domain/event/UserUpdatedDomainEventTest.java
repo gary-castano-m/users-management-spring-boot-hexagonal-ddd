@@ -8,6 +8,7 @@ import com.jcaa.usersmanagement.domain.model.UserModel;
 import com.jcaa.usersmanagement.domain.valueobject.UserEmail;
 import com.jcaa.usersmanagement.domain.valueobject.UserId;
 import com.jcaa.usersmanagement.domain.valueobject.UserName;
+import com.jcaa.usersmanagement.domain.valueobject.UserUsername;
 import com.jcaa.usersmanagement.domain.valueobject.UserPassword;
 import java.time.LocalDateTime;
 import java.util.Map;
@@ -39,6 +40,7 @@ class UserUpdatedDomainEventTest {
     user =
         new UserModel(
             new UserId(ID),
+            new UserUsername("usuario.test"),
             new UserName(NAME),
             new UserEmail(EMAIL),
             UserPassword.fromHash(HASH),

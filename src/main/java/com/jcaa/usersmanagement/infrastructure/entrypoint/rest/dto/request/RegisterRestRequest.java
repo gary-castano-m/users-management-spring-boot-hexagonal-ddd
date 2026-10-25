@@ -2,6 +2,7 @@ package com.jcaa.usersmanagement.infrastructure.entrypoint.rest.dto.request;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -10,6 +11,12 @@ import jakarta.validation.constraints.Size;
 // crea usuarios MEMBER, para que nadie pueda registrarse como ADMIN.
 // ─────────────────────────────────────────────────────────────────────────────
 public record RegisterRestRequest(
+    @NotBlank(message = "username must not be blank")
+        @Size(min = 3, max = 30, message = "username must have between 3 and 30 characters")
+        @Pattern(
+            regexp = "^[A-Za-z0-9._-]+$",
+            message = "username may only contain letters, digits, '.', '_' and '-'")
+        String username,
     @NotBlank(message = "name must not be blank")
         @Size(min = 3, message = "name must have at least 3 characters")
         String name,

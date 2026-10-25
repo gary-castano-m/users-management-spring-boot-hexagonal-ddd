@@ -10,6 +10,7 @@ import com.jcaa.usersmanagement.domain.model.UserModel;
 import com.jcaa.usersmanagement.domain.valueobject.UserEmail;
 import com.jcaa.usersmanagement.domain.valueobject.UserId;
 import com.jcaa.usersmanagement.domain.valueobject.UserName;
+import com.jcaa.usersmanagement.domain.valueobject.UserUsername;
 import com.jcaa.usersmanagement.domain.valueobject.UserPassword;
 import com.jcaa.usersmanagement.infrastructure.adapter.persistence.dto.UserPersistenceDto;
 import com.jcaa.usersmanagement.infrastructure.adapter.persistence.entity.UserEntity;
@@ -35,6 +36,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class UserPersistenceMapperTest {
 
   private static final String ID = "u-001";
+  private static final String USERNAME = "john.doe";
   private static final String NAME = "John Doe";
   private static final String EMAIL = "john@example.com";
   private static final String HASH = "$2a$12$abcdefghijklmnopqrstuO";
@@ -53,13 +55,16 @@ class UserPersistenceMapperTest {
     userModel =
         new UserModel(
             new UserId(ID),
+            new UserUsername(USERNAME),
             new UserName(NAME),
             new UserEmail(EMAIL),
             UserPassword.fromHash(HASH),
             UserRole.ADMIN,
             UserStatus.ACTIVE);
 
-    userEntity = new UserEntity(ID, NAME, EMAIL, HASH, ROLE, STATUS, CREATED_AT, UPDATED_AT);
+    userEntity =
+        new UserEntity(
+            ID, USERNAME, NAME, EMAIL, HASH, ROLE, STATUS, CREATED_AT, UPDATED_AT);
   }
 
   // ── fromModelToDto()
@@ -74,6 +79,7 @@ class UserPersistenceMapperTest {
     assertAll(
         "fromModelToDto()",
         () -> assertEquals(ID, result.id(), "id"),
+        () -> assertEquals(USERNAME, result.username(), "username"),
         () -> assertEquals(NAME, result.name(), "name"),
         () -> assertEquals(EMAIL, result.email(), "email"),
         () -> assertEquals(HASH, result.password(), "password"),
@@ -95,6 +101,7 @@ class UserPersistenceMapperTest {
     assertAll(
         "fromEntityToModel()",
         () -> assertEquals(ID, result.getId().value(), "id"),
+        () -> assertEquals(USERNAME, result.getUsername().value(), "username"),
         () -> assertEquals(NAME, result.getName().value(), "name"),
         () -> assertEquals(EMAIL, result.getEmail().value(), "email"),
         () -> assertEquals(UserRole.ADMIN, result.getRole(), "role"),
@@ -104,10 +111,11 @@ class UserPersistenceMapperTest {
   // ── fromResultSetToEntity() — happy path
 
   @Test
-  @DisplayName("fromResultSetToEntity() reads all eight columns from the ResultSet")
+  @DisplayName("fromResultSetToEntity() reads all nine columns from the ResultSet")
   void shouldReadAllColumnsFromResultSet() throws SQLException {
     // Arrange
     when(resultSet.getString("id")).thenReturn(ID);
+    when(resultSet.getString("username")).thenReturn(USERNAME);
     when(resultSet.getString("name")).thenReturn(NAME);
     when(resultSet.getString("email")).thenReturn(EMAIL);
     when(resultSet.getString("password")).thenReturn(HASH);
@@ -123,6 +131,7 @@ class UserPersistenceMapperTest {
     assertAll(
         "fromResultSetToEntity()",
         () -> assertEquals(ID, result.id(), "id"),
+        () -> assertEquals(USERNAME, result.username(), "username"),
         () -> assertEquals(NAME, result.name(), "name"),
         () -> assertEquals(EMAIL, result.email(), "email"),
         () -> assertEquals(HASH, result.password(), "password"),
@@ -170,6 +179,7 @@ class UserPersistenceMapperTest {
     // Arrange
     when(resultSet.next()).thenReturn(true, true, false);
     when(resultSet.getString("id")).thenReturn(ID, "u-002");
+    when(resultSet.getString("username")).thenReturn(USERNAME, "jane.doe");
     when(resultSet.getString("name")).thenReturn(NAME, "Jane Doe");
     when(resultSet.getString("email")).thenReturn(EMAIL, "jane@example.com");
     when(resultSet.getString("password")).thenReturn(HASH, HASH);

@@ -5,6 +5,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 import com.jcaa.usersmanagement.application.port.out.GetUserByEmailPort;
+import com.jcaa.usersmanagement.application.port.out.GetUserByUsernamePort;
 import com.jcaa.usersmanagement.application.service.dto.command.LoginCommand;
 import com.jcaa.usersmanagement.domain.enums.UserRole;
 import com.jcaa.usersmanagement.domain.enums.UserStatus;
@@ -13,6 +14,7 @@ import com.jcaa.usersmanagement.domain.model.UserModel;
 import com.jcaa.usersmanagement.domain.valueobject.UserEmail;
 import com.jcaa.usersmanagement.domain.valueobject.UserId;
 import com.jcaa.usersmanagement.domain.valueobject.UserName;
+import com.jcaa.usersmanagement.domain.valueobject.UserUsername;
 import com.jcaa.usersmanagement.domain.valueobject.UserPassword;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Validation;
@@ -28,24 +30,28 @@ import org.mockito.junit.jupiter.MockitoExtension;
 /**
  * Tests para LoginService.
  *
- * <p>Cubre: login exitoso, email no encontrado, contraseña incorrecta, usuario inactivo/bloqueado y
- * validación del command.
+ * <p>Cubre: login exitoso (por correo y por username), usuario no encontrado, contraseña
+ * incorrecta, usuario inactivo/bloqueado, formato inválido y validación del command.
  */
 @DisplayName("LoginService")
 @ExtendWith(MockitoExtension.class)
 class LoginServiceTest {
 
   @Mock private GetUserByEmailPort getUserByEmailPort;
+  @Mock private GetUserByUsernamePort getUserByUsernamePort;
 
   private LoginService service;
 
   private static final String EMAIL = "john@example.com";
+  private static final String USERNAME = "john.arrieta";
   private static final String PASSWORD = "SecurePass1";
 
   @BeforeEach
   void setUp() {
     try (final ValidatorFactory validatorFactory = Validation.buildDefaultValidatorFactory()) {
-      service = new LoginService(getUserByEmailPort, validatorFactory.getValidator());
+      service =
+          new LoginService(
+              getUserByEmailPort, getUserByUsernamePort, validatorFactory.getValidator());
     }
   }
 
@@ -60,6 +66,7 @@ class LoginServiceTest {
     final UserModel activeUser =
         new UserModel(
             new UserId("u-001"),
+            new UserUsername("john.arrieta"),
             new UserName("John Arrieta"),
             new UserEmail(EMAIL),
             UserPassword.fromPlainText(PASSWORD),
@@ -100,6 +107,7 @@ class LoginServiceTest {
     final UserModel user =
         new UserModel(
             new UserId("u-001"),
+            new UserUsername("john.arrieta"),
             new UserName("John Arrieta"),
             new UserEmail(EMAIL),
             UserPassword.fromPlainText(PASSWORD),
@@ -123,6 +131,7 @@ class LoginServiceTest {
     final UserModel pendingUser =
         new UserModel(
             new UserId("u-001"),
+            new UserUsername("john.arrieta"),
             new UserName("John Arrieta"),
             new UserEmail(EMAIL),
             UserPassword.fromPlainText(PASSWORD),
@@ -141,11 +150,91 @@ class LoginServiceTest {
   @DisplayName(
       "execute() lanza ConstraintViolationException cuando el command tiene campos inválidos")
   void shouldThrowWhenCommandIsInvalid() {
-    // Arrange — email inválido y password muy corto
-    final LoginCommand command = new LoginCommand("no-es-email", "short");
+    // Arrange — usuario en blanco y password muy corto
+    final LoginCommand command = new LoginCommand(" ", "short");
 
     // Act & Assert
     assertThrows(ConstraintViolationException.class, () -> service.execute(command));
+    verifyNoInteractions(getUserByEmailPort, getUserByUsernamePort);
+  }
+
+  // ── login por username
+
+  @Test
+  @DisplayName("execute() busca por username cuando el texto no contiene '@'")
+  void shouldLoginWithUsername() {
+    // Arrange — se escribe con mayúsculas: debe normalizarse a minúsculas
+    final LoginCommand command = new LoginCommand("John.Arrieta", PASSWORD);
+    final UserModel activeUser = activeUser();
+    when(getUserByUsernamePort.getByUsername(new UserUsername(USERNAME)))
+        .thenReturn(Optional.of(activeUser));
+
+    // Act
+    final UserModel result = service.execute(command);
+
+    // Assert
+    assertSame(activeUser, result, "debe retornar el usuario autenticado");
     verifyNoInteractions(getUserByEmailPort);
+  }
+
+  @Test
+  @DisplayName("execute() busca por correo cuando el texto contiene '@'")
+  void shouldLoginWithEmailWithoutTouchingUsernamePort() {
+    // Arrange
+    final LoginCommand command = new LoginCommand(EMAIL, PASSWORD);
+    when(getUserByEmailPort.getByEmail(new UserEmail(EMAIL)))
+        .thenReturn(Optional.of(activeUser()));
+
+    // Act
+    service.execute(command);
+
+    // Assert
+    verifyNoInteractions(getUserByUsernamePort);
+  }
+
+  @Test
+  @DisplayName("execute() lanza InvalidCredentialsException cuando el username no existe")
+  void shouldThrowWhenUsernameNotFound() {
+    // Arrange
+    final LoginCommand command = new LoginCommand("nadie", PASSWORD);
+    when(getUserByUsernamePort.getByUsername(any())).thenReturn(Optional.empty());
+
+    // Act & Assert
+    assertThrows(InvalidCredentialsException.class, () -> service.execute(command));
+  }
+
+  @Test
+  @DisplayName(
+      "execute() responde credenciales inválidas (no error de formato) con un username mal formado")
+  void shouldThrowInvalidCredentialsWhenUsernameFormatIsInvalid() {
+    // Arrange — "ana torres" tiene un espacio: no puede ser un username
+    final LoginCommand command = new LoginCommand("ana torres", PASSWORD);
+
+    // Act & Assert
+    assertThrows(InvalidCredentialsException.class, () -> service.execute(command));
+    verifyNoInteractions(getUserByEmailPort, getUserByUsernamePort);
+  }
+
+  @Test
+  @DisplayName(
+      "execute() responde credenciales inválidas (no error de formato) con un correo mal formado")
+  void shouldThrowInvalidCredentialsWhenEmailFormatIsInvalid() {
+    // Arrange — contiene "@" pero no es un correo válido
+    final LoginCommand command = new LoginCommand("ana@", PASSWORD);
+
+    // Act & Assert
+    assertThrows(InvalidCredentialsException.class, () -> service.execute(command));
+    verifyNoInteractions(getUserByEmailPort, getUserByUsernamePort);
+  }
+
+  private static UserModel activeUser() {
+    return new UserModel(
+        new UserId("u-001"),
+        new UserUsername(USERNAME),
+        new UserName("John Arrieta"),
+        new UserEmail(EMAIL),
+        UserPassword.fromPlainText(PASSWORD),
+        UserRole.MEMBER,
+        UserStatus.ACTIVE);
   }
 }

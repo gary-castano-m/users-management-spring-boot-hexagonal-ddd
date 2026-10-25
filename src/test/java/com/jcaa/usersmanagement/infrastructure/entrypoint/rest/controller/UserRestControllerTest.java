@@ -18,6 +18,7 @@ import com.jcaa.usersmanagement.domain.model.UserModel;
 import com.jcaa.usersmanagement.domain.valueobject.UserEmail;
 import com.jcaa.usersmanagement.domain.valueobject.UserId;
 import com.jcaa.usersmanagement.domain.valueobject.UserName;
+import com.jcaa.usersmanagement.domain.valueobject.UserUsername;
 import com.jcaa.usersmanagement.domain.valueobject.UserPassword;
 import com.jcaa.usersmanagement.infrastructure.security.JwtAuthenticationFilter;
 import com.jcaa.usersmanagement.infrastructure.security.JwtTokenService;
@@ -65,6 +66,7 @@ class UserRestControllerTest {
     final UserModel user =
         new UserModel(
             new UserId(ID),
+            new UserUsername("ada.lovelace"),
             new UserName("Ada Lovelace"),
             new UserEmail("ada@example.com"),
             UserPassword.fromHash("$2a$12$abcdefghijklmnopqrstuuuuuuuuuuuuuuuuuuuuuuuuuuuuu"),
@@ -77,6 +79,7 @@ class UserRestControllerTest {
         .perform(get("/api/users/{id}", ID))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.id").value(ID))
+        .andExpect(jsonPath("$.username").value("ada.lovelace"))
         .andExpect(jsonPath("$.name").value("Ada Lovelace"))
         .andExpect(jsonPath("$.email").value("ada@example.com"))
         .andExpect(jsonPath("$.role").value("ADMIN"))

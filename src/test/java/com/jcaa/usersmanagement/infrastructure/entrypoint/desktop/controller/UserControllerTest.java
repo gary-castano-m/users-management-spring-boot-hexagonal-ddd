@@ -30,6 +30,7 @@ import com.jcaa.usersmanagement.domain.model.UserModel;
 import com.jcaa.usersmanagement.domain.valueobject.UserEmail;
 import com.jcaa.usersmanagement.domain.valueobject.UserId;
 import com.jcaa.usersmanagement.domain.valueobject.UserName;
+import com.jcaa.usersmanagement.domain.valueobject.UserUsername;
 import com.jcaa.usersmanagement.domain.valueobject.UserPassword;
 import com.jcaa.usersmanagement.infrastructure.entrypoint.desktop.dto.CreateUserRequest;
 import com.jcaa.usersmanagement.infrastructure.entrypoint.desktop.dto.LoginRequest;
@@ -77,6 +78,7 @@ class UserControllerTest {
       final UserStatus status) {
     return new UserModel(
         new UserId(id),
+        new UserUsername("usuario.test"),
         new UserName(name),
         new UserEmail(email),
         UserPassword.fromHash(BCRYPT_HASH),
@@ -367,8 +369,8 @@ class UserControllerTest {
         () ->
             assertEquals(
                 "frank@example.com",
-                captor.getValue().email(),
-                "command email must match request email"),
+                captor.getValue().usuario(),
+                "command usuario must match request email"),
         () ->
             assertEquals(
                 "Pass1234!",

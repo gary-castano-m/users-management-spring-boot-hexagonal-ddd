@@ -9,12 +9,14 @@
 
 -- ─────────────────────────────────────────────
 -- Tabla de usuarios
+-- username: nombre de usuario para iniciar sesión (único, en minúsculas).
 -- role y status usan VARCHAR + CHECK en lugar de ENUM:
 -- el repositorio envía estos valores con setString(),
 -- y un tipo ENUM de PostgreSQL rechazaría texto plano.
 -- ─────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS users (
     id          VARCHAR(36)  NOT NULL PRIMARY KEY,
+    username    VARCHAR(30)  NOT NULL UNIQUE,
     name        VARCHAR(100) NOT NULL,
     email       VARCHAR(150) NOT NULL UNIQUE,
     password    VARCHAR(255) NOT NULL,
@@ -31,9 +33,10 @@ CREATE TABLE IF NOT EXISTS users (
 -- Contraseña: Admin1234!  (hash BCrypt real, costo 12)
 -- ON CONFLICT permite ejecutar el script varias veces sin error.
 -- ─────────────────────────────────────────────
-INSERT INTO users (id, name, email, password, role, status)
+INSERT INTO users (id, username, name, email, password, role, status)
 VALUES (
     '00000000-0000-0000-0000-000000000001',
+    'admin',
     'Administrador',
     'admin@example.com',
     '$2a$12$KITwpmH9ZG/bdV5NfJmnvuVKTgDXYbuYz6iol8IyR1asW0U4j6Ub2',

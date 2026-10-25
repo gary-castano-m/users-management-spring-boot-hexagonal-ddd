@@ -8,6 +8,7 @@ import com.jcaa.usersmanagement.domain.valueobject.UserEmail;
 import com.jcaa.usersmanagement.domain.valueobject.UserId;
 import com.jcaa.usersmanagement.domain.valueobject.UserName;
 import com.jcaa.usersmanagement.domain.valueobject.UserPassword;
+import com.jcaa.usersmanagement.domain.valueobject.UserUsername;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -26,6 +27,7 @@ class UserModelTest {
   private static final String HASH = "$2a$12$abcdefghijklmnopqrstuO";
 
   private UserId userId;
+  private UserUsername username;
   private UserName userName;
   private UserEmail userEmail;
   private UserPassword password;
@@ -33,6 +35,7 @@ class UserModelTest {
   @BeforeEach
   void setUp() {
     userId = new UserId("u-001");
+    username = new UserUsername("alice");
     userName = new UserName("Alice Smith");
     userEmail = new UserEmail("alice@example.com");
     password = UserPassword.fromHash(HASH);
@@ -45,14 +48,15 @@ class UserModelTest {
   void shouldCreateUserWithPendingStatusAndPreserveAllFields() {
     // Act
     final UserModel model =
-        UserModel.create(userId, userName, userEmail, password, UserRole.MEMBER);
+        UserModel.create(userId, username, userName, userEmail, password, UserRole.MEMBER);
 
     // Assert
     assertAll(
         "create() factory",
         () ->
             assertEquals(UserStatus.PENDING, model.getStatus(), "status debe iniciar como PENDING"),
-        () -> assertSame(password, model.getPassword(), "password debe preservarse"));
+        () -> assertSame(password, model.getPassword(), "password debe preservarse"),
+        () -> assertSame(username, model.getUsername(), "username debe preservarse"));
   }
 
   // ── activate()
@@ -62,7 +66,7 @@ class UserModelTest {
   void shouldActivateAndPreserveOtherFields() {
     // Arrange
     final UserModel pending =
-        UserModel.create(userId, userName, userEmail, password, UserRole.REVIEWER);
+        UserModel.create(userId, username, userName, userEmail, password, UserRole.REVIEWER);
 
     // Act
     final UserModel activated = pending.activate();
@@ -73,6 +77,7 @@ class UserModelTest {
         () -> assertNotSame(pending, activated, "debe ser una nueva instancia"),
         () -> assertEquals(UserStatus.ACTIVE, activated.getStatus(), "status debe ser ACTIVE"),
         () -> assertSame(userId, activated.getId(), "id debe preservarse"),
+        () -> assertSame(username, activated.getUsername(), "username debe preservarse"),
         () -> assertSame(userName, activated.getName(), "name debe preservarse"),
         () -> assertSame(userEmail, activated.getEmail(), "email debe preservarse"),
         () -> assertEquals(UserRole.REVIEWER, activated.getRole(), "role debe preservarse"));
@@ -85,7 +90,7 @@ class UserModelTest {
   void shouldDeactivateAndPreserveOtherFields() {
     // Arrange
     final UserModel active =
-        new UserModel(userId, userName, userEmail, password, UserRole.ADMIN, UserStatus.ACTIVE);
+        new UserModel(userId, username, userName, userEmail, password, UserRole.ADMIN, UserStatus.ACTIVE);
 
     // Act
     final UserModel deactivated = active.deactivate();
@@ -97,6 +102,7 @@ class UserModelTest {
         () ->
             assertEquals(UserStatus.INACTIVE, deactivated.getStatus(), "status debe ser INACTIVE"),
         () -> assertSame(userId, deactivated.getId(), "id debe preservarse"),
+        () -> assertSame(username, deactivated.getUsername(), "username debe preservarse"),
         () -> assertEquals(UserRole.ADMIN, deactivated.getRole(), "role debe preservarse"));
   }
 
@@ -107,7 +113,7 @@ class UserModelTest {
   void shouldChangePasswordAndPreserveOtherFields() {
     // Arrange
     final UserModel active =
-        new UserModel(userId, userName, userEmail, password, UserRole.MEMBER, UserStatus.ACTIVE);
+        new UserModel(userId, username, userName, userEmail, password, UserRole.MEMBER, UserStatus.ACTIVE);
     final UserPassword newPassword = UserPassword.fromHash("$2a$12$nuevoHashDePruebaXXXXXX");
 
     // Act
@@ -119,6 +125,7 @@ class UserModelTest {
         () -> assertNotSame(active, changed, "debe ser una nueva instancia"),
         () -> assertSame(newPassword, changed.getPassword(), "password debe ser la nueva"),
         () -> assertSame(userId, changed.getId(), "id debe preservarse"),
+        () -> assertSame(username, changed.getUsername(), "username debe preservarse"),
         () -> assertEquals(UserRole.MEMBER, changed.getRole(), "role debe preservarse"),
         () -> assertEquals(UserStatus.ACTIVE, changed.getStatus(), "status debe preservarse"));
   }

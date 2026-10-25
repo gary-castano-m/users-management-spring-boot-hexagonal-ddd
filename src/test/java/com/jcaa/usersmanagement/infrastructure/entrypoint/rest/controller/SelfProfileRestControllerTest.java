@@ -17,6 +17,7 @@ import com.jcaa.usersmanagement.domain.model.UserModel;
 import com.jcaa.usersmanagement.domain.valueobject.UserEmail;
 import com.jcaa.usersmanagement.domain.valueobject.UserId;
 import com.jcaa.usersmanagement.domain.valueobject.UserName;
+import com.jcaa.usersmanagement.domain.valueobject.UserUsername;
 import com.jcaa.usersmanagement.domain.valueobject.UserPassword;
 import com.jcaa.usersmanagement.infrastructure.entrypoint.rest.dto.request.UpdateProfileRestRequest;
 import com.jcaa.usersmanagement.infrastructure.entrypoint.rest.dto.response.UserRestResponse;
@@ -80,7 +81,8 @@ class SelfProfileRestControllerTest {
     when(getUserByIdUseCase.execute(new GetUserByIdQuery(OWN_ID))).thenReturn(member());
     when(updateUserUseCase.execute(captor.capture())).thenReturn(member());
     final UpdateProfileRestRequest request =
-        new UpdateProfileRestRequest("Ana Maria Torres", "ana.maria@example.com", null);
+        new UpdateProfileRestRequest(
+            "ana.maria.torres", "Ana Maria Torres", "ana.maria@example.com", null);
 
     // Act
     controller.updateProfile(authentication, request);
@@ -92,6 +94,7 @@ class SelfProfileRestControllerTest {
         () -> assertEquals(OWN_ID, command.id(), "el id sale del token"),
         () -> assertEquals("MEMBER", command.role(), "el rol se conserva"),
         () -> assertEquals("ACTIVE", command.status(), "el estado se conserva"),
+        () -> assertEquals("ana.maria.torres", command.username(), "el username es editable"),
         () -> assertEquals("Ana Maria Torres", command.name()),
         () -> assertEquals("ana.maria@example.com", command.email()));
   }
@@ -109,6 +112,7 @@ class SelfProfileRestControllerTest {
   private static UserModel member() {
     return new UserModel(
         new UserId(OWN_ID),
+        new UserUsername("ana.torres"),
         new UserName("Ana Torres"),
         new UserEmail("ana@example.com"),
         UserPassword.fromPlainText("Pass1234"),

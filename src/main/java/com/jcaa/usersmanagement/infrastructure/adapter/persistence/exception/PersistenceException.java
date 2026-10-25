@@ -6,6 +6,7 @@ public final class PersistenceException extends RuntimeException {
   private static final String MESSAGE_UPDATE = "Failed to update user with ID: '%s'.";
   private static final String MESSAGE_FIND = "Failed to find user with ID: '%s'.";
   private static final String MESSAGE_EMAIL = "Failed to find user with email: '%s'.";
+  private static final String MESSAGE_USERNAME = "Failed to find user with username: '%s'.";
   private static final String MESSAGE_ALL = "Failed to retrieve all users.";
   private static final String MESSAGE_DELETE = "Failed to delete user with ID: '%s'.";
   private static final String MESSAGE_CONNECTION = "Could not establish database connection.";
@@ -32,6 +33,11 @@ public final class PersistenceException extends RuntimeException {
   public static PersistenceException becauseFindByEmailFailed(
       final String email, final Throwable cause) {
     return new PersistenceException(String.format(MESSAGE_EMAIL, email), cause);
+  }
+
+  public static PersistenceException becauseFindByUsernameFailed(
+      final String username, final Throwable cause) {
+    return new PersistenceException(String.format(MESSAGE_USERNAME, username), cause);
   }
 
   public static PersistenceException becauseFindAllFailed(final Throwable cause) {

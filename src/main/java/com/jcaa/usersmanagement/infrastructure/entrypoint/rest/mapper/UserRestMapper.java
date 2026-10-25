@@ -27,6 +27,7 @@ public class UserRestMapper {
     return new CreateUserCommand(
         // El id lo genera el servidor, no el cliente
         UserId.generate().value(),
+        request.username(),
         request.name(),
         request.email(),
         request.password(),
@@ -36,6 +37,7 @@ public class UserRestMapper {
   public CreateUserCommand toRegisterCommand(final RegisterRestRequest request) {
        return new CreateUserCommand(
            UserId.generate().value(),
+           request.username(),
            request.name(),
            request.email(),
            request.password(),
@@ -45,6 +47,7 @@ public class UserRestMapper {
   public UpdateUserCommand toUpdateCommand(final String id, final UpdateUserRestRequest request) {
     return new UpdateUserCommand(
         id,
+        request.username(),
         request.name(),
         request.email(),
         request.password(),
@@ -61,6 +64,7 @@ public class UserRestMapper {
          final UserModel current, final UpdateProfileRestRequest request) {
        return new UpdateUserCommand(
            current.getId().value(),
+           request.username(),
            request.name(),
            request.email(),
            request.password(),
@@ -79,6 +83,7 @@ public class UserRestMapper {
   public UserRestResponse toResponse(final UserModel user) {
     return new UserRestResponse(
         user.getId().value(),
+        user.getUsername().value(),
         user.getName().value(),
         user.getEmail().value(),
         user.getRole().name(),
