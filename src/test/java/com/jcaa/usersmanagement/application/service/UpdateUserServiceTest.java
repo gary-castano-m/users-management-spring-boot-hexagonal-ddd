@@ -6,6 +6,7 @@ import static org.mockito.Mockito.*;
 
 import com.jcaa.usersmanagement.application.port.out.GetUserByEmailPort;
 import com.jcaa.usersmanagement.application.port.out.GetUserByIdPort;
+import com.jcaa.usersmanagement.application.port.out.GetUserByUsernamePort;
 import com.jcaa.usersmanagement.application.port.out.UpdateUserPort;
 import com.jcaa.usersmanagement.application.service.dto.command.UpdateUserCommand;
 import com.jcaa.usersmanagement.domain.enums.UserRole;
@@ -32,8 +33,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 /**
  * Tests para UpdateUserService.
  *
- * <p>Cubre: flujo feliz, usuario no encontrado, email tomado por otro usuario, email del mismo
- * usuario (no debe fallar) y validación del command.
+ * <p>Cubre: flujo feliz, usuario no encontrado, email o username tomado por otro usuario, email o
+ * username del mismo usuario (no debe fallar) y validación del command.
  */
 @DisplayName("UpdateUserService")
 @ExtendWith(MockitoExtension.class)
@@ -42,6 +43,7 @@ class UpdateUserServiceTest {
   @Mock private UpdateUserPort updateUserPort;
   @Mock private GetUserByIdPort getUserByIdPort;
   @Mock private GetUserByEmailPort getUserByEmailPort;
+  @Mock private GetUserByUsernamePort getUserByUsernamePort;
   @Mock private EmailNotificationService emailNotificationService;
 
   private UpdateUserService service;
@@ -60,6 +62,7 @@ class UpdateUserServiceTest {
               updateUserPort,
               getUserByIdPort,
               getUserByEmailPort,
+              getUserByUsernamePort,
               emailNotificationService,
               validatorFactory.getValidator());
     }
@@ -171,6 +174,55 @@ class UpdateUserServiceTest {
 
     // Act & Assert
     assertThrows(ConstraintViolationException.class, () -> service.execute(command));
-    verifyNoInteractions(updateUserPort, getUserByIdPort, getUserByEmailPort);
+    verifyNoInteractions(
+        updateUserPort, getUserByIdPort, getUserByEmailPort, getUserByUsernamePort);
+  }
+
+  // ── username tomado por otro usuario
+
+  @Test
+  @DisplayName(
+      "execute() lanza UserAlreadyExistsException cuando el username pertenece a otro usuario")
+  void shouldThrowWhenUsernameBelongsToAnotherUser() {
+    // Arrange
+    final UpdateUserCommand command =
+        new UpdateUserCommand(ID, "other.user", "John", EMAIL, null, "MEMBER", "ACTIVE");
+
+    final UserModel otherUser =
+        new UserModel(
+            new UserId("u-999"),
+            new UserUsername("other.user"),
+            new UserName("Other User"),
+            new UserEmail("other@example.com"),
+            UserPassword.fromHash(HASH),
+            UserRole.MEMBER,
+            UserStatus.ACTIVE);
+
+    when(getUserByIdPort.getById(any())).thenReturn(Optional.of(existingUser));
+    when(getUserByEmailPort.getByEmail(any())).thenReturn(Optional.of(existingUser));
+    when(getUserByUsernamePort.getByUsername(any())).thenReturn(Optional.of(otherUser));
+
+    // Act & Assert
+    assertThrows(UserAlreadyExistsException.class, () -> service.execute(command));
+    verify(updateUserPort, never()).update(any());
+  }
+
+  // ── username del mismo usuario: no debe lanzar excepción
+
+  @Test
+  @DisplayName("execute() permite mantener el mismo username del propio usuario")
+  void shouldAllowKeepingOwnUsername() {
+    // Arrange
+    final UpdateUserCommand command =
+        new UpdateUserCommand(ID, "john.arrieta", "John Updated", EMAIL, null, "ADMIN", "ACTIVE");
+
+    when(getUserByIdPort.getById(any())).thenReturn(Optional.of(existingUser));
+    when(getUserByEmailPort.getByEmail(any())).thenReturn(Optional.of(existingUser));
+    when(getUserByUsernamePort.getByUsername(any())).thenReturn(Optional.of(existingUser));
+    when(updateUserPort.update(any())).thenReturn(existingUser);
+
+    // Act & Assert
+    assertDoesNotThrow(() -> service.execute(command));
+    verify(updateUserPort).update(any());
   }
 }
