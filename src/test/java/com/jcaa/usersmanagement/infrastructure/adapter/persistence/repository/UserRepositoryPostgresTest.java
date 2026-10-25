@@ -2,6 +2,7 @@ package com.jcaa.usersmanagement.infrastructure.adapter.persistence.repository;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.contains;
 import static org.mockito.Mockito.*;
 
 import com.jcaa.usersmanagement.domain.enums.UserRole;
@@ -34,7 +35,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
  *
  * <p>Covers all public methods with their branches: save() — happy path, INSERT failure, user not
  * found after insert (orElseThrow); update() — happy path, UPDATE failure; getById() — found, not
- * found, SQLException; getByEmail() — found, not found, SQLException; getAll() — happy path,
+ * found, SQLException; getByEmail() — found, not found, SQLException; getByUsername() — found,
+ * not found, SQLException; getAll() — happy path,
  * SQLException; delete() — happy path, SQLException.
  */
 @DisplayName("UserRepositoryPostgres")
@@ -275,6 +277,63 @@ class UserRepositoryPostgresTest {
         PersistenceException.class,
         () -> repository.getById(userId),
         "must throw PersistenceException when PreparedStatement.close() raises SQLException after normal body exit");
+  }
+
+  // ── getByUsername() — row found → Optional.of(user)
+
+  @Test
+  @DisplayName("getByUsername() returns Optional.of(user) when a matching row exists")
+  void shouldReturnUserByUsernameWhenFound() throws SQLException {
+    // Arrange
+    configureStatementAndResultSet();
+    when(resultSet.next()).thenReturn(true);
+    configureResultSetRow();
+
+    // Act
+    final Optional<UserModel> result = repository.getByUsername(new UserUsername(USERNAME));
+
+    // Assert
+    assertAll(
+        "getByUsername() found",
+        () -> assertTrue(result.isPresent(), "must be present"),
+        () ->
+            assertEquals(
+                USERNAME, result.map(u -> u.getUsername().value()).orElse(null), "username"));
+    verify(connection).prepareStatement(contains("WHERE username = ?"));
+    verify(statement).setString(1, USERNAME);
+  }
+
+  // ── getByUsername() — no row → Optional.empty()
+
+  @Test
+  @DisplayName("getByUsername() returns Optional.empty() when no matching row exists")
+  void shouldReturnEmptyWhenUsernameNotFound() throws SQLException {
+    // Arrange
+    configureStatementAndResultSet();
+    when(resultSet.next()).thenReturn(false);
+
+    // Act
+    final Optional<UserModel> result = repository.getByUsername(new UserUsername(USERNAME));
+
+    // Assert
+    assertTrue(result.isEmpty(), "must return Optional.empty() when no row matches the username");
+  }
+
+  // ── getByUsername() — SQLException → PersistenceException
+
+  @Test
+  @DisplayName("getByUsername() throws PersistenceException when executeQuery raises SQLException")
+  void shouldThrowPersistenceExceptionOnGetByUsernameFailure() throws SQLException {
+    // Arrange
+    when(dataSource.getConnection()).thenReturn(connection);
+    when(connection.prepareStatement(anyString())).thenReturn(statement);
+    when(statement.executeQuery()).thenThrow(new SQLException("Query failed"));
+    final UserUsername username = new UserUsername(USERNAME);
+
+    // Act + Assert
+    final PersistenceException exception =
+        assertThrows(PersistenceException.class, () -> repository.getByUsername(username));
+    assertTrue(exception.getMessage().contains(USERNAME), "message must name the username");
   }
 
   // ── getByEmail() — row found → Optional.of(user)
