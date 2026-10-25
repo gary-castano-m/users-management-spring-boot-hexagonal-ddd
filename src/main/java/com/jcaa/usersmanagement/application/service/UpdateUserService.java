@@ -3,6 +3,7 @@ package com.jcaa.usersmanagement.application.service;
 import com.jcaa.usersmanagement.application.port.in.UpdateUserUseCase;
 import com.jcaa.usersmanagement.application.port.out.GetUserByEmailPort;
 import com.jcaa.usersmanagement.application.port.out.GetUserByIdPort;
+import com.jcaa.usersmanagement.application.port.out.GetUserByUsernamePort;
 import com.jcaa.usersmanagement.application.port.out.UpdateUserPort;
 import com.jcaa.usersmanagement.application.service.dto.command.UpdateUserCommand;
 import com.jcaa.usersmanagement.application.service.mapper.UserApplicationMapper;
@@ -11,6 +12,7 @@ import com.jcaa.usersmanagement.domain.exception.UserNotFoundException;
 import com.jcaa.usersmanagement.domain.model.UserModel;
 import com.jcaa.usersmanagement.domain.valueobject.UserEmail;
 import com.jcaa.usersmanagement.domain.valueobject.UserId;
+import com.jcaa.usersmanagement.domain.valueobject.UserUsername;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Validator;
@@ -26,6 +28,7 @@ public class UpdateUserService implements UpdateUserUseCase {
   private final UpdateUserPort updateUserPort;
   private final GetUserByIdPort getUserByIdPort;
   private final GetUserByEmailPort getUserByEmailPort;
+  private final GetUserByUsernamePort getUserByUsernamePort;
   private final EmailNotificationService emailNotificationService;
   private final Validator validator;
 
@@ -38,6 +41,8 @@ public class UpdateUserService implements UpdateUserUseCase {
     final UserEmail newEmail = new UserEmail(command.email());
 
     ensureEmailIsNotTakenByAnotherUser(newEmail, userId);
+    final UserUsername newUsername = new UserUsername(command.username());
+    ensureUsernameIsNotTakenByAnotherUser(newUsername, userId);
 
     final UserModel userToUpdate =
         UserApplicationMapper.fromUpdateCommandToModel(command, current.getPassword());
@@ -68,6 +73,18 @@ public class UpdateUserService implements UpdateUserUseCase {
             found -> {
               if (!found.getId().equals(ownerId)) {
                 throw UserAlreadyExistsException.becauseEmailAlreadyExists(newEmail.value());
+              }
+            });
+  }
+
+  private void ensureUsernameIsNotTakenByAnotherUser(
+      final UserUsername newUsername, final UserId ownerId) {
+    getUserByUsernamePort
+        .getByUsername(newUsername)
+        .ifPresent(
+            found -> {
+              if (!found.getId().equals(ownerId)) {
+                throw UserAlreadyExistsException.becauseUsernameAlreadyExists(newUsername.value());
               }
             });
   }
