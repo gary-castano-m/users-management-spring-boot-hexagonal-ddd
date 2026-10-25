@@ -5,6 +5,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 import com.jcaa.usersmanagement.application.port.out.GetUserByEmailPort;
+import com.jcaa.usersmanagement.application.port.out.GetUserByUsernamePort;
 import com.jcaa.usersmanagement.application.port.out.SaveUserPort;
 import com.jcaa.usersmanagement.application.service.dto.command.CreateUserCommand;
 import com.jcaa.usersmanagement.domain.enums.UserRole;
@@ -31,7 +32,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 /**
  * Tests para CreateUserService.
  *
- * <p>Cubre: validación del command, email duplicado y flujo feliz (save + notificación).
+ * <p>Cubre: validación del command, email duplicado, username duplicado y flujo feliz (save +
+ * notificación).
  */
 @DisplayName("CreateUserService")
 @ExtendWith(MockitoExtension.class)
@@ -39,6 +41,7 @@ class CreateUserServiceTest {
 
   @Mock private SaveUserPort saveUserPort;
   @Mock private GetUserByEmailPort getUserByEmailPort;
+  @Mock private GetUserByUsernamePort getUserByUsernamePort;
   @Mock private EmailNotificationService emailNotificationService;
 
   private CreateUserService service;
@@ -50,6 +53,7 @@ class CreateUserServiceTest {
           new CreateUserService(
               saveUserPort,
               getUserByEmailPort,
+              getUserByUsernamePort,
               emailNotificationService,
               validatorFactory.getValidator());
     }
@@ -129,7 +133,8 @@ class CreateUserServiceTest {
 
     // Act & Assert
     assertThrows(ConstraintViolationException.class, () -> service.execute(command));
-    verifyNoInteractions(saveUserPort, getUserByEmailPort, emailNotificationService);
+    verifyNoInteractions(
+        saveUserPort, getUserByEmailPort, getUserByUsernamePort, emailNotificationService);
   }
 
      // ── estado inicial del usuario
@@ -151,4 +156,60 @@ class CreateUserServiceTest {
        verify(saveUserPort).save(captor.capture());
        assertEquals(UserStatus.ACTIVE, captor.getValue().getStatus());
      }
+
+  // ── username duplicado
+
+  @Test
+  @DisplayName("execute() lanza UserAlreadyExistsException cuando el username ya está registrado")
+  void shouldThrowWhenUsernameAlreadyExists() {
+    // Arrange — el correo es nuevo, pero el username ya lo usa otra persona
+    final CreateUserCommand command =
+        new CreateUserCommand(
+            "u-04", "jane.doe", "Jane Doe", "jane.nueva@example.com", "Pass5678", "MEMBER");
+
+    final UserModel existing =
+        new UserModel(
+            new UserId("u-99"),
+            new UserUsername("jane.doe"),
+            new UserName("Jane Doe"),
+            new UserEmail("jane@example.com"),
+            UserPassword.fromHash("$2a$12$abcdefghijklmnopqrstuO"),
+            UserRole.MEMBER,
+            UserStatus.ACTIVE);
+
+    when(getUserByEmailPort.getByEmail(any())).thenReturn(Optional.empty());
+    when(getUserByUsernamePort.getByUsername(new UserUsername("jane.doe")))
+        .thenReturn(Optional.of(existing));
+
+    // Act
+    final UserAlreadyExistsException exception =
+        assertThrows(UserAlreadyExistsException.class, () -> service.execute(command));
+
+    // Assert
+    assertTrue(exception.getMessage().contains("jane.doe"), "el mensaje debe nombrar el username");
+    verify(saveUserPort, never()).save(any());
+    verify(emailNotificationService, never()).notifyUserCreated(any(), any());
+  }
+
+  // ── username normalizado
+
+  @Test
+  @DisplayName("execute() guarda el username en minúsculas y sin espacios alrededor")
+  void shouldSaveNormalizedUsername() {
+    // Arrange
+    final CreateUserCommand command =
+        new CreateUserCommand(
+            "u-05", "  Ana.Torres  ", "Ana Torres", "ana@example.com", "Pass1234", "MEMBER");
+    final ArgumentCaptor<UserModel> captor = ArgumentCaptor.forClass(UserModel.class);
+    when(getUserByEmailPort.getByEmail(any())).thenReturn(Optional.empty());
+    when(getUserByUsernamePort.getByUsername(any())).thenReturn(Optional.empty());
+    when(saveUserPort.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+    // Act
+    service.execute(command);
+
+    // Assert
+    verify(saveUserPort).save(captor.capture());
+    assertEquals("ana.torres", captor.getValue().getUsername().value());
+  }
 }
