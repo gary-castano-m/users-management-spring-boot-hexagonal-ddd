@@ -6,12 +6,14 @@ import com.jcaa.usersmanagement.application.service.dto.command.LoginCommand;
 import com.jcaa.usersmanagement.application.service.dto.command.UpdateUserCommand;
 import com.jcaa.usersmanagement.application.service.dto.query.GetUserByIdQuery;
 import com.jcaa.usersmanagement.domain.model.UserModel;
+import com.jcaa.usersmanagement.domain.valueobject.UserUsername;
 import com.jcaa.usersmanagement.infrastructure.entrypoint.desktop.dto.CreateUserRequest;
 import com.jcaa.usersmanagement.infrastructure.entrypoint.desktop.dto.LoginRequest;
 import com.jcaa.usersmanagement.infrastructure.entrypoint.desktop.dto.UpdateUserRequest;
 import com.jcaa.usersmanagement.infrastructure.entrypoint.desktop.dto.UserResponse;
 
 import java.util.List;
+import java.util.Locale;
 
 public final class UserDesktopMapper {
 
@@ -19,17 +21,43 @@ public final class UserDesktopMapper {
 
   public static CreateUserCommand toCreateCommand(final CreateUserRequest request) {
     return new CreateUserCommand(
-        request.id(), request.name(), request.email(), request.password(), request.role());
+        request.id(),
+        usernameFromEmail(request.email()),
+        request.name(),
+        request.email(),
+        request.password(),
+        request.role());
   }
 
   public static UpdateUserCommand toUpdateCommand(final UpdateUserRequest request) {
     return new UpdateUserCommand(
         request.id(),
+        usernameFromEmail(request.email()),
         request.name(),
         request.email(),
         request.password(),
         request.role(),
         request.status());
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // La consola de escritorio no pide username: se deriva del correo con la
+  // misma regla de la migración de la base de datos (parte antes de la "@",
+  // en minúsculas, símbolos no permitidos cambiados por "_").
+  // Ej.: "Ana.Perez+1@mail.com" → "ana.perez_1".
+  // ─────────────────────────────────────────────────────────────────────────
+  static String usernameFromEmail(final String email) {
+    if (email == null) {
+      return null;
+    }
+    final String localPart = email.trim().split("@", 2)[0].toLowerCase(Locale.ROOT);
+    String username = localPart.replaceAll("[^a-z0-9._-]", "_");
+    while (username.length() < UserUsername.MINIMUM_LENGTH) {
+      username = username + "_";
+    }
+    return username.length() > UserUsername.MAXIMUM_LENGTH
+        ? username.substring(0, UserUsername.MAXIMUM_LENGTH)
+        : username;
   }
 
   public static DeleteUserCommand toDeleteCommand(final String id) {

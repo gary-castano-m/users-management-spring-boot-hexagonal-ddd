@@ -7,6 +7,7 @@ import com.jcaa.usersmanagement.domain.valueobject.UserEmail;
 import com.jcaa.usersmanagement.domain.valueobject.UserId;
 import com.jcaa.usersmanagement.domain.valueobject.UserName;
 import com.jcaa.usersmanagement.domain.valueobject.UserPassword;
+import com.jcaa.usersmanagement.domain.valueobject.UserUsername;
 import com.jcaa.usersmanagement.infrastructure.adapter.persistence.dto.UserPersistenceDto;
 import com.jcaa.usersmanagement.infrastructure.adapter.persistence.entity.UserEntity;
 import lombok.experimental.UtilityClass;
@@ -22,6 +23,7 @@ public class UserPersistenceMapper {
   public UserPersistenceDto fromModelToDto(final UserModel user) {
     return new UserPersistenceDto(
         user.getId().value(),
+        user.getUsername().value(),
         user.getName().value(),
         user.getEmail().value(),
         user.getPassword().value(),
@@ -34,6 +36,7 @@ public class UserPersistenceMapper {
   public UserEntity fromResultSetToEntity(final ResultSet resultSet) throws SQLException {
     return new UserEntity(
         resultSet.getString("id"),
+        resultSet.getString("username"),
         resultSet.getString("name"),
         resultSet.getString("email"),
         resultSet.getString("password"),
@@ -46,6 +49,7 @@ public class UserPersistenceMapper {
   public UserModel fromEntityToModel(final UserEntity entity) {
     return new UserModel(
         new UserId(entity.id()),
+        new UserUsername(entity.username()),
         new UserName(entity.name()),
         new UserEmail(entity.email()),
         UserPassword.fromHash(entity.password()),

@@ -4,6 +4,7 @@ import com.jcaa.usersmanagement.application.port.out.DeleteUserPort;
 import com.jcaa.usersmanagement.application.port.out.GetAllUsersPort;
 import com.jcaa.usersmanagement.application.port.out.GetUserByEmailPort;
 import com.jcaa.usersmanagement.application.port.out.GetUserByIdPort;
+import com.jcaa.usersmanagement.application.port.out.GetUserByUsernamePort;
 import com.jcaa.usersmanagement.application.port.out.SaveUserPort;
 import com.jcaa.usersmanagement.application.port.out.SearchUsersPort;
 import com.jcaa.usersmanagement.application.port.out.UpdateUserPort;
@@ -12,6 +13,7 @@ import com.jcaa.usersmanagement.domain.exception.UserNotFoundException;
 import com.jcaa.usersmanagement.domain.model.UserModel;
 import com.jcaa.usersmanagement.domain.valueobject.UserEmail;
 import com.jcaa.usersmanagement.domain.valueobject.UserId;
+import com.jcaa.usersmanagement.domain.valueobject.UserUsername;
 import com.jcaa.usersmanagement.infrastructure.adapter.persistence.dto.UserPersistenceDto;
 import com.jcaa.usersmanagement.infrastructure.adapter.persistence.exception.PersistenceException;
 import com.jcaa.usersmanagement.infrastructure.adapter.persistence.mapper.UserPersistenceMapper;
@@ -36,31 +38,38 @@ public class UserRepositoryPostgres
         UpdateUserPort,
         GetUserByIdPort,
         GetUserByEmailPort,
+        GetUserByUsernamePort,
         GetAllUsersPort,
         DeleteUserPort,
         SearchUsersPort {
 
   private static final String SQL_INSERT =
       "INSERT INTO users "
-      + "(id, name, email, password, role, status, created_at, updated_at) "
-      + "VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())";
+      + "(id, username, name, email, password, role, status, created_at, updated_at) "
+      + "VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), NOW())";
 
   private static final String SQL_UPDATE =
-      "UPDATE users SET name = ?, email = ?, password = ?, role = ?, status = ?, updated_at = NOW() "
+      "UPDATE users SET username = ?, name = ?, email = ?, password = ?, role = ?, status = ?, "
+      + "updated_at = NOW() "
       + "WHERE id = ?";
 
   private static final String SQL_SELECT_BY_ID =
-      "SELECT id, name, email, password, role, status, created_at, updated_at "
+      "SELECT id, username, name, email, password, role, status, created_at, updated_at "
       + "FROM users "
       + "WHERE id = ? LIMIT 1";
 
   private static final String SQL_SELECT_BY_EMAIL =
-      "SELECT id, name, email, password, role, status, created_at, updated_at "
+      "SELECT id, username, name, email, password, role, status, created_at, updated_at "
       + "FROM users "
       + "WHERE email = ? LIMIT 1";
 
+  private static final String SQL_SELECT_BY_USERNAME =
+      "SELECT id, username, name, email, password, role, status, created_at, updated_at "
+      + "FROM users "
+      + "WHERE username = ? LIMIT 1";
+
   private static final String SQL_SELECT_ALL =
-      "SELECT id, name, email, password, role, status, created_at, updated_at "
+      "SELECT id, username, name, email, password, role, status, created_at, updated_at "
       + "FROM users "
       + "ORDER BY name ASC";
 
@@ -70,7 +79,7 @@ public class UserRepositoryPostgres
 
   // ── Reportes: búsqueda con filtros opcionales (el WHERE se arma en search())
   private static final String SQL_SEARCH_BASE =
-      "SELECT id, name, email, password, role, status, created_at, updated_at "
+      "SELECT id, username, name, email, password, role, status, created_at, updated_at "
       + "FROM users";
 
   private static final String SQL_ORDER_BY_NAME = " ORDER BY name ASC";
@@ -119,6 +128,21 @@ public class UserRepositoryPostgres
       return Optional.of(UserPersistenceMapper.fromResultSetToModel(resultSet));
     } catch (final SQLException exception) {
       throw PersistenceException.becauseFindByEmailFailed(email.value(), exception);
+    }
+  }
+
+  @Override
+  public Optional<UserModel> getByUsername(final UserUsername username) {
+    try (final Connection connection = dataSource.getConnection();
+         final PreparedStatement statement = connection.prepareStatement(SQL_SELECT_BY_USERNAME)) {
+      statement.setString(1, username.value());
+      final ResultSet resultSet = statement.executeQuery();
+      if (!resultSet.next()) {
+        return Optional.empty();
+      }
+      return Optional.of(UserPersistenceMapper.fromResultSetToModel(resultSet));
+    } catch (final SQLException exception) {
+      throw PersistenceException.becauseFindByUsernameFailed(username.value(), exception);
     }
   }
 
@@ -185,11 +209,12 @@ public class UserRepositoryPostgres
     try (final Connection connection = dataSource.getConnection();
          final PreparedStatement statement = connection.prepareStatement(SQL_INSERT)) {
       statement.setString(1, dto.id());
-      statement.setString(2, dto.name());
-      statement.setString(3, dto.email());
-      statement.setString(4, dto.password());
-      statement.setString(5, dto.role());
-      statement.setString(6, dto.status());
+      statement.setString(2, dto.username());
+      statement.setString(3, dto.name());
+      statement.setString(4, dto.email());
+      statement.setString(5, dto.password());
+      statement.setString(6, dto.role());
+      statement.setString(7, dto.status());
       statement.executeUpdate();
     } catch (final SQLException exception) {
       throw PersistenceException.becauseSaveFailed(dto.id(), exception);
@@ -199,12 +224,13 @@ public class UserRepositoryPostgres
   private void executeUpdate(final UserPersistenceDto dto) {
     try (final Connection connection = dataSource.getConnection();
          final PreparedStatement statement = connection.prepareStatement(SQL_UPDATE)) {
-      statement.setString(1, dto.name());
-      statement.setString(2, dto.email());
-      statement.setString(3, dto.password());
-      statement.setString(4, dto.role());
-      statement.setString(5, dto.status());
-      statement.setString(6, dto.id());
+      statement.setString(1, dto.username());
+      statement.setString(2, dto.name());
+      statement.setString(3, dto.email());
+      statement.setString(4, dto.password());
+      statement.setString(5, dto.role());
+      statement.setString(6, dto.status());
+      statement.setString(7, dto.id());
       statement.executeUpdate();
     } catch (final SQLException exception) {
       throw PersistenceException.becauseUpdateFailed(dto.id(), exception);

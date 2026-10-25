@@ -6,12 +6,14 @@ import com.jcaa.usersmanagement.domain.valueobject.UserEmail;
 import com.jcaa.usersmanagement.domain.valueobject.UserId;
 import com.jcaa.usersmanagement.domain.valueobject.UserName;
 import com.jcaa.usersmanagement.domain.valueobject.UserPassword;
+import com.jcaa.usersmanagement.domain.valueobject.UserUsername;
 import lombok.Value;
 
 @Value
 public class UserModel {
 
   UserId id;
+  UserUsername username;
   UserName name;
   UserEmail email;
   UserPassword password;
@@ -20,19 +22,20 @@ public class UserModel {
 
   public static UserModel create(
       final UserId id,
+      final UserUsername username,
       final UserName name,
       final UserEmail email,
       final UserPassword password,
       final UserRole role) {
-    return new UserModel(id, name, email, password, role, UserStatus.PENDING);
+    return new UserModel(id, username, name, email, password, role, UserStatus.PENDING);
   }
 
   public UserModel activate() {
-    return new UserModel(id, name, email, password, role, UserStatus.ACTIVE);
+    return new UserModel(id, username, name, email, password, role, UserStatus.ACTIVE);
   }
 
   public UserModel deactivate() {
-    return new UserModel(id, name, email, password, role, UserStatus.INACTIVE);
+    return new UserModel(id, username, name, email, password, role, UserStatus.INACTIVE);
   }
 
   /**
@@ -40,6 +43,6 @@ public class UserModel {
    * cambia. Se usa en la recuperación de contraseña.
    */
   public UserModel changePassword(final UserPassword newPassword) {
-    return new UserModel(id, name, email, newPassword, role, status);
+    return new UserModel(id, username, name, email, newPassword, role, status);
   }
 }

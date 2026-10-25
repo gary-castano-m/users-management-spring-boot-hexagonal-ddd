@@ -2,6 +2,7 @@ package com.jcaa.usersmanagement.infrastructure.adapter.persistence.entity;
 
 public record UserEntity(
     String id,
+    String username,
     String name,
     String email,
     String password,
