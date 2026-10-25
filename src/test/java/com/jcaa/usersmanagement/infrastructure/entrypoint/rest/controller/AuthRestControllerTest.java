@@ -74,6 +74,25 @@ class AuthRestControllerTest {
     assertThat(response.user().status()).isEqualTo("ACTIVE");
   }
 
+  @Test
+  void shouldForwardUsernameToTheLoginUseCase() {
+    // Arrange — el campo "usuario" también acepta el username
+    final UserModel user = activeUser();
+    final LoginCommand command = new LoginCommand("test.user", PASSWORD);
+    when(loginUseCase.execute(command)).thenReturn(user);
+    when(jwtTokenService.generate(user)).thenReturn("signed.jwt.token");
+    when(jwtTokenService.expirationSeconds()).thenReturn(900L);
+    final AuthRestController controller = new AuthRestController(loginUseCase, jwtTokenService);
+
+    // Act
+    final LoginRestResponse response =
+        controller.login(new LoginRestRequest("test.user", PASSWORD));
+
+    // Assert
+    assertThat(response.user().username()).isEqualTo("test.user");
+    verify(loginUseCase).execute(command);
+  }
+
   private static UserModel activeUser() {
     return new UserModel(
         new UserId("user-001"),

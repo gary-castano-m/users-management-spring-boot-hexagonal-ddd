@@ -369,8 +369,8 @@ class UserControllerTest {
         () ->
             assertEquals(
                 "frank@example.com",
-                captor.getValue().email(),
-                "command email must match request email"),
+                captor.getValue().usuario(),
+                "command usuario must match request email"),
         () ->
             assertEquals(
                 "Pass1234!",
