@@ -24,9 +24,24 @@ Universidad de Cartagena · Ingeniería de Software
 | Documentación de la API (Swagger) | https://oye-api-j5l4.onrender.com/swagger-ui/index.html |
 | APK | [`kodular/oye.apk`](kodular/oye.apk) |
 | Proyecto Kodular | [`kodular/Oye.aia`](kodular/Oye.aia) |
-| Videos (lista de YouTube) | _ENLACE_DE_LA_LISTA_DE_REPRODUCCION_ |
+| Videos de sustentación | [6 videos en YouTube](#videos-de-sustentación) |
 
 > La API corre en el plan gratuito de Render: si lleva un rato sin uso, la primera petición tarda hasta un minuto mientras el servidor despierta.
+
+---
+
+## Videos de sustentación
+
+La sustentación está dividida en 6 videos cortos. Se recomienda verlos en orden: cada uno explica una pieza del proyecto y el último muestra la app funcionando.
+
+| # | Video | Enlace |
+|:-:|---|---|
+| 1 | De Corte 1 a Corte 2: introducción | [Ver video 1](https://youtu.be/XKE0sMTvVrU) |
+| 2 | El backend: Spring Boot y arquitectura hexagonal | [Ver video 2](https://youtu.be/JxN87nfTfx8) |
+| 3 | La base de datos: Neon PostgreSQL | [Ver video 3](https://youtu.be/B4bYO8_fiXM) |
+| 4 | El despliegue: Docker y Render | [Ver video 4](https://youtu.be/9P4kYhaBz8M) |
+| 5 | Seguridad y correo: BCrypt, JWT, roles y Brevo | [Ver video 5](https://youtu.be/cwmls7ZyKFE) |
+| 6 | La app Kodular en acción | [Ver video 6](https://youtu.be/kdKobTNyDgg) |
 
 ---
 
